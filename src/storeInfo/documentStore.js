@@ -1,19 +1,19 @@
 
 //状态管理数据:this.$store.state获取，mapState辅助函数
 const states={
-    data:[]//数据
+    dataList:[]//数据
 
 }
 //用来处理数据函数,其接收唯一参数值state，必须为同步函数，以免数据混乱 this.$store.commit(mutationName)，mapMutations辅助函数
 const mutations={
     //更新项目列表
     UPDATEPROJECTLIST:function (state,data) {
-        state.data = data;
+        state.dataList = data;
     },
 }
 //通过触发mutation实现的数据变化，可以异步操作，this.$store.dispatch(actionName)，mapActions辅助函数
 const actions={
-    getData:function(context, obj) {
+    getDataList:function(context, obj) {
         let p = new Promise(function (resolve,reject) {
             let template = {
                 'code': '0',
