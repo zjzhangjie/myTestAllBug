@@ -1,3 +1,4 @@
+<!--在ios上input原生方法会出现数据混乱的问题，用v-model则不会-->
 <template>
   <div class="about">
     <input ref="input"  v-model="keyWords"   type="search" placeholder="搜索">
