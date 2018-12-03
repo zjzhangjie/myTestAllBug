@@ -4,7 +4,6 @@
       <router-link to="/">Home</router-link> |
       <router-link to="/inputBug">inputBug</router-link>
       <router-link to="/tableDraggle">tableDraggle</router-link>
-      tableDraggle
     </div>
     <router-view/>
   </div>
