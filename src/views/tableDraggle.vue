@@ -1,27 +1,30 @@
 <!--被自己蠢爆了，，无话可说简直啦，，，，element的table只要加上border，就可以随便改变列宽度-->
 <template>
-    <el-table
-            id="applyTable"
-            :data="tableData"
-            height="100%"
-            border
-            stripe
-            @header-dragend="colChange">
-        <el-table-column
-                v-for="(item,index) in tableColumns"
-                :key="index"
-                :prop="item.name"
-                :label="item.name">
-        </el-table-column>
-        <el-table-column
-                label="操作"
-                :resizable="false">
-            <template slot-scope="scope">
-                <button class="u-button">填写申请单</button>
-                <button class="u-button">删除</button>
-            </template>
-        </el-table-column>
-    </el-table>
+    <div>
+        <el-table
+                id="applyTable"
+                :data="tableData"
+                height="100%"
+                border
+                stripe
+                @header-dragend="colChange">
+            <el-table-column
+                    v-for="(item,index) in tableColumns"
+                    :key="index"
+                    :prop="item.name"
+                    :label="item.name">
+            </el-table-column>
+            <el-table-column
+                    label="操作"
+                    :resizable="false">
+                <template slot-scope="scope">
+                    <button class="u-button">填写申请单</button>
+                    <button class="u-button">删除</button>
+                </template>
+            </el-table-column>
+        </el-table>
+    </div>
+
 </template>
 
 <script>
@@ -37,6 +40,7 @@
                     zuoqin:'左琴'
 
                 }],
+                dscPartData:''
             }
         },
         watch:{
@@ -81,10 +85,18 @@
                 //    localStorage.setItem('applyTableColWidths', JSON.stringify(applyTableColWidths))
                 }, 100)
             } ,
-            mounted() {
-               // this.getTableColWidth()
-            }
-
+        },
+        mounted() {
+            let vm=this
+            let obj=new Object()
+            var item=['1','2','a','c'];
+                vm.dscPartData = vm.$store.state.documentStore.dataList;
+            vm.$store.state.documentStore.dataList='阿拉蕾'
+                console.log( vm.$store.state.documentStore.dataList);
+           // vm.$store.store.dispatch('setUserList',item);
+            // vm.$store.dispatch('getAllData', obj).then(function () {
+            //     vm.dscPartData = vm.$store.state.documentStore.dataList;
+            // })
         }
     }
 
