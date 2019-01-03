@@ -16,18 +16,16 @@ export default new Router({
     {
       path: '/inputBug',
       name: 'inputBug',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ './views/inputBug.vue')
+      component: () => import('./views/inputBug.vue')
     },
       {
           path: '/tableDraggle',
           name: 'tableDraggle',
-          // route level code-splitting
-          // this generates a separate chunk (about.[hash].js) for this route
-          // which is lazy-loaded when the route is visited.
-          component: () => import(/* webpackChunkName: "about" */ './views/tableDraggle.vue')
-      }
+          component: () => import('./views/tableDraggle.vue')
+      },{
+          path: '/dhtmlGanttx',
+          name: 'dhtmlGanttx',
+          component: () => import('./views/dhtmlGanttx.vue')
+      },
   ]
 })
