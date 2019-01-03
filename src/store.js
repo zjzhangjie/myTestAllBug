@@ -1,16 +1,11 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-
-Vue.use(Vuex)
-
+import Vue from "vue";
+import Vuex from "vuex";
+import documentStore from "./storeInfo/documentStore";
+Vue.use(Vuex);
 export default new Vuex.Store({
-  state: {
+    //模块化
+    modules: {
+        documentStore,
+    }
+});
 
-  },
-  mutations: {
-
-  },
-  actions: {
-
-  }
-})
