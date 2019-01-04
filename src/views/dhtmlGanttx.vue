@@ -23,9 +23,50 @@
             let vm=this;
             vm.settingGanttConfig();//配置文件初始化之前
             gantt.init(this.$refs["pm-execute-gantt"]);//初始化gatt
-            gantt.parse(vm.$store.state.documentStore.task);//加载甘特图的基础数据
+            //解析甘特图
+            vm.getGanttData()
+            let obj=this.test();
+            console.log("async"+obj)
         },
         methods:{
+            getGanttData(){
+                let vm=this
+                gantt.addTaskLayer(function draw_deadline(task) {
+                    if (task.plan_start && task.plan_end) {
+                        let s = new Date(task.plan_start + " 00:00 "); //设置为零时零点
+                        let e = new Date(task.plan_end + " 00:00 "); //设置为零时零点
+                        let sizes = gantt.getTaskPosition(task, task.plan_start, task.plan_end);
+                        let el = document.createElement("div");
+                        el.className =" baseline";
+                        el.style.left = sizes.left + "px";
+                        el.style.width = 100 + "px";
+                        el.style.top = sizes.top + gantt.config.task_height + 19 + "px";
+                        return el;
+                    }
+                    return false;
+                });
+                gantt.parse(vm.$store.state.documentStore.task);//加载甘特图的基础数据
+                //添加标记
+                console.info("====耗时======" + (new Date().getTime() - start) / 1000);
+                vm.addMarker();
+            },
+            //添加标记
+            addMarker() {
+                gantt.addMarker({
+                    start_date: new Date(),
+                    css: "today",
+                    text: "今天",
+                    title:
+                    "今天："// the marker's tooltip
+                });
+            },
+            async test(){
+                // let promise = new Promise((resolve, reject) => {
+                //     setTimeout(() => resolve('done!'), 1000)
+                // });
+                // let result = await promise // 直到promise返回一个resolve值（*）
+                // alert(result) // 'done!'
+            },
             //构造WBS CODE
             buildWbsCode(task) {
                 let formal = gantt.getWBSCode(task);
@@ -50,13 +91,13 @@
                 //自动调整类型,当存在字节点时自动升级为project
                 gantt.config.auto_types = false;
                 //设置不可以拖动进度
-                gantt.config.drag_progress = false;
+                gantt.config.drag_progress = true;
                 //设置Task不可以拖动
                 gantt.config.drag_move = false;
                 //设置不可以拖动关系
-                gantt.config.drag_links = false;
+                gantt.config.drag_links = true;
                 //设置不可拖动Task 大小
-                gantt.config.drag_resize = false;
+                gantt.config.drag_resize = true;
                 //单击显示添加详情
                 gantt.config.details_on_create = true;
                 //双击显示明细
@@ -210,7 +251,7 @@
                 //甘特图高度
                 gantt.config.task_height = 16;
                 //设置甘特特图计算单位
-                gantt.config.scale_unit = "month";
+                gantt.config.scale_unit = "year";
                 //设置任务可以同级拖拽
                 gantt.config.order_branch = true;
                 //编辑框设置
@@ -273,11 +314,6 @@
                 //         vm.isShowBox = !vm.isShowBox;
                 //     }
                 // };
-                gantt.hideLightbox = function() {
-                    vm.isShowBox = false;
-                    vm.isShowProgressBox = false;
-                    vm.taskId = null;
-                };
                 // //设置task 任务样式
                 gantt.templates.task_class = function(start, end, task) {
                     if (task.parent !== "") {
@@ -294,65 +330,7 @@
                 };
                 //鼠标移上去提示
                 gantt.templates.tooltip_text = function(start, end, task) {
-                    if (vm.editType == "scanPlan") {
-                        return (
-                            "<div class='pm-tips'>" +
-                            "<div>" +
-                            "<span class='tip-title'>任务名称:</span>" +
-                            "<span class='tip-info'>" +
-                            task.text +
-                            "</span>" +
-                            "</div>" +
-                            "<div>" +
-                            "<span class='tip-title'>计划开始时间:</span>" +
-                            "<span class='tip-info'>" +
-                                new Date(task.start_date).getTime()+
-                            "</span>" +
-                            "</div> " +
-                            "<div>" +
-                            "<span class='tip-title'>计划结束时间:</span>" +
-                            "<span class='tip-info'>" +
-                                new Date(task.end_date).getTime()+
-                            "</span>" +
-                            "</div> " +
-                            "<div>" +
-                            "<span class='tip-title'>完成进度:</span>" +
-                            "<span class='tip-info'>" +
-                            Math.round(task.progress * 10000) / 100 +
-                            "%</span>" +
-                            "</div> " +
-                            "</div>"
-                        );
-                    } else {
-                        return (
-                            "<div class='pm-tips'>" +
-                            "<div>" +
-                            "<span class='tip-title'>任务名称:</span>" +
-                            "<span class='tip-info'>" +
-                            task.text +
-                            "</span>" +
-                            "</div>" +
-                            "<div>" +
-                            "<span class='tip-title'>开始时间:</span>" +
-                            "<span class='tip-info'>" +
-                                new Date(task.start_date).getTime()+
-                            "</span>" +
-                            "</div> " +
-                            "<div>" +
-                            "<span class='tip-title'>结束时间:</span>" +
-                            "<span class='tip-info'>" +
-                                new Date(task.end_date).getTime()+
-                            "</span>" +
-                            "</div> " +
-                            "<div>" +
-                            "<span class='tip-title'>完成进度:</span>" +
-                            "<span class='tip-info'>" +
-                            Math.round(task.progress * 10000) / 100 +
-                            "%</span>" +
-                            "</div> " +
-                            "</div>"
-                        );
-                    }
+                    return "123456";
                 };
                 //甘特图 Grid class
                 gantt.templates.grid_row_class = function(start, end, task) {
