@@ -24,48 +24,25 @@
             vm.settingGanttConfig();//配置文件初始化之前
             gantt.init(this.$refs["pm-execute-gantt"]);//初始化gatt
             //解析甘特图
-            vm.getGanttData()
-            let obj=this.test();
-            console.log("async"+obj)
+            vm.getGanttData();//加载基础数据
+            // 添加甘特图事件
+            vm.runTest()
         },
         methods:{
+            runTest(){
+                let p=new Promise(function (resolve,reject) {
+                    //做一些异步操作
+                    setTimeout(()=>{
+                        console.log("执行完成");
+                        resolve('随便')
+                    },2000)
+
+                });
+                return p
+            },
             getGanttData(){
-                let vm=this
-                gantt.addTaskLayer(function draw_deadline(task) {
-                    if (task.plan_start && task.plan_end) {
-                        let s = new Date(task.plan_start + " 00:00 "); //设置为零时零点
-                        let e = new Date(task.plan_end + " 00:00 "); //设置为零时零点
-                        let sizes = gantt.getTaskPosition(task, task.plan_start, task.plan_end);
-                        let el = document.createElement("div");
-                        el.className =" baseline";
-                        el.style.left = sizes.left + "px";
-                        el.style.width = 100 + "px";
-                        el.style.top = sizes.top + gantt.config.task_height + 19 + "px";
-                        return el;
-                    }
-                    return false;
-                });
+                let vm=this;
                 gantt.parse(vm.$store.state.documentStore.task);//加载甘特图的基础数据
-                //添加标记
-                console.info("====耗时======" + (new Date().getTime() - start) / 1000);
-                vm.addMarker();
-            },
-            //添加标记
-            addMarker() {
-                gantt.addMarker({
-                    start_date: new Date(),
-                    css: "today",
-                    text: "今天",
-                    title:
-                    "今天："// the marker's tooltip
-                });
-            },
-            async test(){
-                // let promise = new Promise((resolve, reject) => {
-                //     setTimeout(() => resolve('done!'), 1000)
-                // });
-                // let result = await promise // 直到promise返回一个resolve值（*）
-                // alert(result) // 'done!'
             },
             //构造WBS CODE
             buildWbsCode(task) {
@@ -255,65 +232,8 @@
                 //设置任务可以同级拖拽
                 gantt.config.order_branch = true;
                 //编辑框设置
-                // gantt.showLightbox = function(id) {
-                //     vm.taskId = id;
-                //     var task = gantt.getTask(id);
-                //     //控制计划/项目类型节点/根节点不能编辑
-                //     if (
-                //         (task.plan_level == 2 && task.sys_type == "project") ||
-                //         (task.parent == "" || task.parent == null)
-                //     ) {
-                //         return;
-                //     }
-                //     //调整计划
-                //     if (vm.editType == "changePlan") {
-                //         vm.selectedTaskData = {
-                //             parent: task.parent, //父节点Id
-                //             task_id: id, //任务id
-                //             task_name: task.text, //任务名字
-                //             start_date: task.start_date, //开始时间
-                //             end_date: task.end_date, //结束时间
-                //             budget: task.budget || "", //预算资源
-                //             type: task.sys_type || "task",
-                //             plan_level: task.plan_level, //项目计划等级
-                //             is_new: task.$new ? task.$new : false,
-                //             hasChildren: gantt.hasChild(task.id),
-                //             is_scan:false//是否查阅计划基本信息
-                //
-                //         };
-                //         vm.isShowBox = !vm.isShowBox;
-                //         //调整进度
-                //     } else if(vm.editType == "changeProgress") {
-                //         vm.selectedProgressData = {
-                //             task_id: id, //任务id
-                //             task_name: task.text, //任务名字
-                //             actual_start: task.actual_start, //开始时间
-                //             actual_end: task.actual_end, //结束时间
-                //             budget: task.budget || "", //预算资源
-                //             type: task.sys_type || "task",
-                //             plan_level: task.plan_level, //项目计划等级
-                //             progress: Math.round(task.progress * 10000) / 100, //项目进度
-                //             hasChildren: gantt.hasChild(task.id)
-                //         };
-                //         vm.isShowProgressBox = !vm.isShowProgressBox;
-                //     }else{
-                //         //查阅计划
-                //         vm.selectedTaskData = {
-                //             task_id: id, //任务id
-                //             task_name: task.text, //任务名字
-                //             start_date: task.plan_start, //计划开始时间【基线】
-                //             end_date: task.plan_end, //计划结束时间【基线】
-                //             budget: task.budget || "", //预算资源
-                //             type: task.sys_type || "task",
-                //             plan_level: task.plan_level, //项目计划等级
-                //             is_new: task.$new ? task.$new : false,
-                //             progress: Math.round(task.progress * 10000) / 100, //项目进度
-                //             hasChildren: gantt.hasChild(task.id),
-                //             is_scan:true,//是否查阅计划基本信息
-                //         };
-                //         vm.isShowBox = !vm.isShowBox;
-                //     }
-                // };
+                gantt.showLightbox = function(id) {
+                };
                 // //设置task 任务样式
                 gantt.templates.task_class = function(start, end, task) {
                     if (task.parent !== "") {
