@@ -98,7 +98,7 @@
                         tree: true,
                         min_width: 200,
                         width: 200,
-                        resize: true
+                        resize: true,
                     },
                     {
                         name: "start_date",
@@ -106,7 +106,10 @@
                         align: "center",
                         resize: true,
                         min_width: 100,
-                        width: 100
+                        width: 100,
+                        template: function(obj) {
+                            return obj.start_date ? obj.start_date : "";
+                        }
                     },
                     {
                         name: "end_date",
@@ -114,7 +117,10 @@
                         align: "center",
                         resize: true,
                         min_width: 100,
-                        width: 100
+                        width: 100,
+                        template: function(obj) {
+                            return obj.end_date ? obj.end_date : "";
+                        }
                     },
                     {
                         name: "plan_start",
@@ -228,7 +234,8 @@
                 //甘特图高度
                 gantt.config.task_height = 16;
                 //设置甘特特图计算单位
-                gantt.config.scale_unit = "year";
+                gantt.config.scale_unit = "month";
+
                 //设置任务可以同级拖拽
                 gantt.config.order_branch = true;
                 //编辑框设置

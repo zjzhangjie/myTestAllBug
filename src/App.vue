@@ -5,6 +5,7 @@
       <router-link to="/inputBug">inputBug</router-link>|
       <router-link to="/tableDraggle">tableDraggle</router-link>|
       <router-link to="/dhtmlGanttx">dhtmlGanttx</router-link>
+      <router-link to="/dhtmlGanttxRe">dhtmlGanttx-resource</router-link>
     </div>
     <router-view/>
   </div>

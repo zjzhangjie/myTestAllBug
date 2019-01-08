@@ -26,6 +26,10 @@ export default new Router({
           path: '/dhtmlGanttx',
           name: 'dhtmlGanttx',
           component: () => import('./views/dhtmlGanttx.vue')
-      },
+      },{
+          path: '/dhtmlGanttxRe',
+          name: 'dhtmlGanttxRe',
+          component: () => import('./views/dhtmlGanttxRe.vue')
+      }
   ]
 })
