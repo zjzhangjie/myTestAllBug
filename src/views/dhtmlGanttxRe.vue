@@ -14,82 +14,140 @@
         name: "dhtmlGanttxRe",
         data(){
             return{
-                tasks:{
-                    data:[
-                        {id:1, text:"项目 #1", start_date:"2016-05-01", duration:11, progress:0.6, open:true},
-                        {id:2, text:"项目 #1", start_date:"2016-05-01", duration:11, progress:1, open:true},
-                        {id:3, text:"项目 #1", start_date:"2016-05-01", duration:11, progress:0.5, open:true},
-                        {id:4, text:"项目 #1", start_date:"2016-05-01", duration:11, progress:0.5, open:true},
-                        {id:5, text:"项目 #1", start_date:"2016-05-01", duration:11, progress:1, open:true},
-                        {id:6, text:"项目 #1", start_date:"2016-05-01", duration:11, progress:0.6, open:true}
-                    ],
-                    links:[
-                        {id:1, source:1, target:2, type:"1"},
-                        {id:2, source:1, target:3, type:"1"},
-                        {id:3, source:3, target:4, type:"1"},
-                        {id:4, source:4, target:5, type:"0"},
-                        {id:5, source:5, target:6, type:"0"}
-                    ]
-                }
+                resource:[
+                    {id: 1, text: "QA", parent:null},
+                    {id: 2, text: "Development", parent:null},
+                    {id: 3, text: "Sales", parent:2},
+                    {id: 4, text: "Other", parent:2},
+                    {id: 5, text: "Unassigned", parent:2},
+                    {id: 6, text: "John", parent:1},
+                    {id: 7, text: "Mike", parent:5},
+                    {id: 8, text: "Anna", parent:5},
+                    {id: 9, text: "Bill", parent:5},
+                    {id: 10, text: "Floe", parent:5}
+                ]
             }
         },
         mounted(){
             let vm=this;
             vm.settingGanttConfig();//配置文件初始化之前
-            gantt.init("pm-control-gantt-re");
-            vm.loadResource();//加载资源，内置灯箱的设置
+            gantt.init("pm-control-gantt-re");//初始化
+            let resourcesStore=vm.resourcesStore();//配置数据储存
+            vm.loadResource(resourcesStore);//加载资源，内置灯箱的设置
+            resourcesStore.parse(vm.resource);//加载资源的基础数据
             gantt.parse(vm.$store.state.documentStore.task);//加载甘特图的基础数据
+
         },
         methods:{
-            loadResource(){
-                //日历
-                // adding a working calendar
-                let johnCalendarId = gantt.addCalendar({
-                    worktime: {
-                        days: [0, 1, 1, 1, 1, 1, 0]
+          //创建resource的store
+            resourcesStore(){
+                let resource = gantt.createDatastore({
+                    name: gantt.config.resource_store,
+                    type: "treeDatastore",
+                    initItem: function (item) {
+                        item.parent = item.parent || gantt.config.root_id;
+                        item[gantt.config.resource_property] = item.id;
+                        item.open = true;
+                        return item;
                     }
                 });
-                // binding the calendar to a user
-                gantt.config.resource_calendars = {
-                    "user_id":{
-                        2: johnCalendarId
-                    }
-                };
-                // init lightbox with an empty collection
-                gantt.locale.labels.section_owner = "资源";//灯箱标题的名字
-                gantt.config.lightbox.sections = [
-                    {name:"description", height:38, map_to:"text", type:"textarea", focus:true},
-                    {name:"owner", map_to:"owner_id", type:"select", options:gantt.serverList("people")},
-                    {name:"time", type:"duration", map_to: "auto"}
-                ];
-               // once options are loaded
-                gantt.updateCollection("people", [
-                    {key: 1, label: "张洁"},
-                    {key: 2, label: "高健"},
-                    {key: 3, label: "王玥"},
-                    {key: 4, label: "桔伍"},
-                    {key: 7, label: "左琴"}
-                ]);
+                return resource
             },
-            //人力资源
+            //配置内置灯箱
+            loadResource(resourcesStore){
+                resourcesStore.attachEvent("onParse", function(){
+                    var people = [];
+                    resourcesStore.eachItem(function(res){
+                        if(!resourcesStore.hasChild(res.id)){
+                            var copy = gantt.copy(res);
+                            copy.key = res.id;
+                            copy.label = res.text;
+                            people.push(copy);
+                        }
+                    });
+                    gantt.updateCollection("people", people);
+                });
+            },
+            //对比名字
              byId(list, id) {
               for (var i = 0; i < list.length; i++) {
-                if (list[i].key == id)
-                            return list[i].label || "";
+                if (list[i].id == id)
+                            return list[i].text || "";
                    }
                       return "";
            },
             settingGanttConfig(){
                 let vm=this;
-                gantt.config.resource_store = "users";
+                gantt.message({
+                    text:[
+                        "这是一个测试例子."
+                    ].join("<br><br>"),
+                    expire: -1
+                });
+                //内置灯箱的配置
+                gantt.locale.labels.section_owner = "Owner";
+                gantt.config.lightbox.sections = [
+                    {name: "description", height: 38, map_to: "text", type: "textarea", focus: true},
+                    {name: "owner", height: 22, map_to: "owner_id", type: "select", options: gantt.serverList("people")},
+                    {name: "time", type: "duration", map_to: "auto"}
+                ];
+                gantt.templates.resource_cell_value = function(start_date, end_date, resource, tasks){
+                    var html = "<div>" +  tasks.length * 8 + "h</div>";
+                    return html;
+                };
+                //resourceStore的名字
+                gantt.config.resource_store="users";
+                //关联的资源ID的任务对象的属性
                 gantt.config.resource_property = "user_id";
-                gantt.config.scale_unit = "month";
-                gantt.config.step = 1;
-                gantt.config.date_scale = "%Y";
+                gantt.templates.resource_cell_class = function(start_date, end_date, resource, tasks){
+                    var css = [];
+                    css.push("resource_marker");
+                    if (tasks.length<= 1){
+                        css.push("workday_ok");
+                    } else {
+                        css.push("workday_over");
+                    }
+                    return css.join(" ");
+                };
+
+                // gantt.config.scale_unit = "month";
+                // gantt.config.step = 1;
+                // gantt.config.date_scale = "%M";
                 //甘特图高度
                 gantt.config.task_height = 16;
                 //设置任务可以同级拖拽
                 gantt.config.order_branch = true;
+                let resourceConfig = {
+                    columns: [
+                        {
+                            name: "name",
+                            label: "姓名", tree:true,
+                            template: function (resource) {
+                                return resource.text;
+                            }
+                        },
+                        {
+                            name: "workload",
+                            label: "工作量",
+                            template: function (resource) {
+                                var tasks;
+                                var store = gantt.getDatastore(gantt.config.resource_store),
+                                    field = gantt.config.resource_property;
+                                if(store.hasChild(resource.id)){
+                                    tasks = gantt.getTaskBy(field, store.getChildren(resource.id));
+                                }else{
+                                    tasks = gantt.getTaskBy(field, resource.id);
+                                }
+
+                                var totalDuration = 0;
+                                for (var i = 0; i < tasks.length; i++) {
+                                    totalDuration += tasks[i].duration;
+                                }
+                                return (totalDuration || 0) * 8 + "h";
+                            }
+                        }
+                    ]
+                };
                 gantt.config.layout = {
                     css: "gantt_container",
                     rows:[
@@ -117,6 +175,17 @@
                                 },
                                 { view: "scrollbar", id: "scrollVer" }
                             ]
+                        },
+                        {resizer: true, width: 1},
+                        {
+                            config: resourceConfig,
+                            cols: [
+                                {view: "resourceGrid", group:"grids", width: 435, scrollY: "resourceVScroll" },
+                                {resizer: true, width: 1},
+                                {view: "resourceTimeline", scrollX: "scrollHor", scrollY: "resourceVScroll"},
+                                {view: "scrollbar", id: "resourceVScroll", group:"vertical"}
+                            ],
+                            gravity:1
                         },
                         {view: "scrollbar", scroll: "x", id:"scrollHor", height:20}
                     ]
@@ -154,73 +223,6 @@
                         }
                     },
                     {
-                        name: "end_date",
-                        label: "完成时间",
-                        align: "center",
-                        resize: true,
-                        min_width: 100,
-                        width: 100,
-                        template: function(obj) {
-                            return obj.end_date ? obj.end_date : "";
-                        }
-                    },
-                    {
-                        name: "plan_start",
-                        label: "计划开始时间",
-                        align: "center",
-                        resize: true,
-                        hide: false,
-                        min_width: 100,
-                        width: 100,
-                        template: function(obj) {
-                            return obj.plan_start ? obj.plan_start : "";
-                        }
-                    },
-                    {
-                        name: "plan_end",
-                        label: "计划完成时间",
-                        align: "center",
-                        resize: true,
-                        hide: false,
-                        min_width: 100,
-                        width: 100,
-                        // template: function(obj) {
-                        //     return obj.plan_end ? obj.plan_end : "";
-                        // }
-                    },
-                    {
-                        name: "actual_start",
-                        label: "实际开始时间",
-                        align: "center",
-                        resize: true,
-                        hide: true,
-                        min_width: 100,
-                        width: 100,
-                        template: function(obj) {
-                            return obj.actual_start ? obj.actual_start : "";
-                        }
-                    },
-                    {
-                        name: "actual_end",
-                        label: "实际完成时间",
-                        align: "center",
-                        resize: true,
-                        hide: true,
-                        min_width: 100,
-                        width: 100,
-                        template: function(obj) {
-                            return obj.actual_end ? obj.actual_end : "";
-                        }
-                    },
-                    {
-                        name: "duration",
-                        label: "工期（天）",
-                        align: "center",
-                        resize: true,
-                        min_width: 80,
-                        width: 80
-                    },
-                    {
                         name: "progress",
                         label: "完成百分比",
                         align: "center",
@@ -244,8 +246,17 @@
                             return obj.budget ? obj.budget : "0";
                         }
                     },
+                    {
+                        name: "duration",
+                        label: "工期（天）",
+                        align: "center",
+                        resize: true,
+                        min_width: 80,
+                        width: 80
+                    },
                     {name: "owner",   label: "owner", width: 80, align: "center", template: function (item) {
-                            return vm.byId(gantt.serverList('people'), item.user_id)}
+                       //     var store =[ gantt.getDatastore(gantt.config.resource_store).pull];
+                            return vm.byId(vm.resource, item.user_id)}
                             },
                     { name: "add", label: "", width: 44, resize: true },
                 ];
@@ -292,8 +303,26 @@
 </script>
 
 <style  lang="less">
+    .resource_marker{
+        text-align: center;
+    }
+    .resource_marker div{
+        width: 28px;
+        height: 28px;
+        line-height: 29px;
+        display: inline-block;
+        border-radius: 15px;
+        color: #FFF;
+        margin: 3px;
+    }
+    .resource_marker.workday_ok div {
+        background: #51c185;
+    }
 
-.pm-gantt-name .gantt_cell:nth-child(10){
+    .resource_marker.workday_over div{
+        background: #ff8686;
+    }
+.pm-gantt-name .gantt_cell:nth-child(7){
      background-color: red;
      border-radius:10%;
      color: #f0f0f0;
