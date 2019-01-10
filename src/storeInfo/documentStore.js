@@ -10,7 +10,7 @@ const states={
                 text: "ROOT",
                 parent: "",
                 outline_level: "1",
-                start_date: "2019-1-1",
+                start_date: "28-03-2018",
                 end_date: "2019-1-2",
                 plan_start: "2019-1-1",
                 plan_end: "2019-1-2",
@@ -22,61 +22,80 @@ const states={
                 is_readonly: false,
                 type: "project",
                 sortorder: 1,
-                user_id: 1
+                user_id: 7,
+                duration:1,
+                priority:1
             },
             {   id:2,
                 text:"项目 #1",
-                start_date:"2016-05-01",
+                start_date:"28-03-2018",
                 plan_start: "2016-05-01",
                 plan_end: "2016-05-03",
                 duration:11,
                 progress:1,
                 open:true,
                 parent:1,
-                user_id: 2,
+                user_id: 8,
+                priority:3
             },
             {id:3,
                 text:"项目 #1",
-                start_date:"2016-05-01",
+                start_date:"28-03-2018",
                 plan_start: "2016-05-01",
                 plan_end: "2016-05-03",
                 duration:11,
                 progress:0.5,
                 open:true,parent:'',
-                user_id: 3
+                user_id: 9,
+                priority:3
             },
             {
                 d:4,
                 text:"项目 #1",
-                start_date:"2016-05-01",
+                start_date:"28-03-2018",
                 plan_start: "2016-05-01",
                 plan_end: "2016-05-03",
-                duration:11,
+                duration:8,
                 progress:0.5,
                 open:true,parent:'',
-                user_id: 4
+                user_id: 10,
+                priority:2
             },
             {
                 id:5,
                 text:"项目 #1",
-                start_date:"2016-05-01",
+                start_date:"28-03-2018",
                 plan_start: "2016-05-01",
                 plan_end: "2016-05-03",
-                duration:11,
+                duration:5,
                 progress:1,
                 open:true,parent:'',
-                users: [2, 3]
+                user_id: 11,
+                priority:3
             },
             {
                 id:6,
                 text:"项目 #1",
-                start_date:"2016-05-01",
+                start_date:"28-03-2018",
                 plan_start: "2016-05-01",
                 plan_end: "2016-05-03",
-                duration:11,
+                duration:7,
                 progress:0.6,
                 open:true,parent:'',
-                user_id: 6
+                user_id: 12,
+                priority:2
+            },
+            {
+                id:7,
+                text:"项目 #1",
+                start_date:"28-03-2018",
+                plan_start: "2016-05-01",
+                plan_end: "2016-05-03",
+                duration:7,
+                progress:0.6,
+                open:true,parent:'',
+                user_id: 13,
+                priority:2
             }
         ],
         links:[
