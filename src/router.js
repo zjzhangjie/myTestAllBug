@@ -30,6 +30,18 @@ export default new Router({
           path: '/dhtmlGanttxRe',
           name: 'dhtmlGanttxRe',
           component: () => import('./views/dhtmlGanttxRe.vue')
+      },{
+          path: '/calendar',
+          name: 'calendar',
+          component: () => import('./views/calendar.vue')
+      },{
+          path: '/mResources',
+          name: 'mResources',
+          component: () => import('./views/mResources.vue')
+      },{
+          path: '/resourcesOver',
+          name: 'resourcesOver',
+          component: () => import('./views/resourcesOver.vue')
       }
   ]
 })
