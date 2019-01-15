@@ -35,7 +35,8 @@
                     {id: 12, text: "Mike", specialty: "Electrician", parent:5},
                     {id: 13, text: "Joe", specialty: "Handyman", parent:6}
                 ],
-                value:'Show Resource view'
+                value:'Show Resource view',
+                resourceMode:'hours'
             }
         },
         mounted(){
@@ -46,14 +47,33 @@
             vm.loadResource(resourcesStore);//加载资源，内置灯箱的设置
             resourcesStore.parse(vm.resource);//加载资源的基础数据
             gantt.parse(vm.$store.state.documentStore.task);//加载甘特图的基础数据
+            vm.addPreEvent()
 
         },
         methods:{
-             toggleGroups(input) {
+            addPreEvent(){
+                gantt.attachEvent("onGanttReady", function() {
+                    var radios = [].slice.call(gantt.$container.querySelectorAll("[name='resource-mode']"));
+                    radios.forEach(function(radio) {
+                        gantt.event(radio, "change", function(e) {
+                            radios.forEach(function(item) {
+                                item.parentNode.classList.toggle("active", e.target === item || e.target.value === item.value);
+                            });
+                            if (this.checked) {
+                                this.resourceMode = this.value;
+                                gantt.getDatastore(gantt.config.resource_store).refresh();
+                            }
+                        });
+                    });
+                });
+
+            },
+            toggleGroups(input) {
               gantt.$groupMode = !gantt.$groupMode;
             if (gantt.$groupMode) {
             this.value = "show gantt view";
-            var groups = gantt.$resourcesStore.getItems().map(function(item){
+            let resourcesStore=this.resourcesStore();//配置数据储存
+            var groups = resourcesStore.getItems().map(function(item){
                 var group = gantt.copy(item);
                 group.group_id = group.id;
                 group.id = gantt.uid();
@@ -128,9 +148,16 @@
                     {name: "time", type: "duration", map_to: "auto"}
                 ];
                 gantt.templates.resource_cell_value = function(start_date, end_date, resource, tasks){
-                    var html = "<div>" +  tasks.length * 8 + "h</div>";
+                    var html = "<div>"
+                    if(vm.resourceMode == "hours"){
+                        html += tasks.length * 8;
+                    }else{
+                        html += tasks.length;
+                    }
+                    html += "</div>";
                     return html;
                 };
+
                 //resourceStore的名字
                 gantt.config.resource_store="users";
                 //关联的资源ID的任务对象的属性
@@ -192,7 +219,7 @@
                             name: "capacity", label: "Capacity", align:"center",template: function (resource) {
                                 var store = gantt.getDatastore(gantt.config.resource_store);
                                 var n = store.hasChild(resource.id) ? store.getChildren(resource.id).length : 1
-                                var state = gantt.getState();
+                                var state = gantt.getState();//获取甘特图的当前状态
                                 return gantt.calculateDuration(state.min_date, state.max_date) * n * 8 + "h";
                             }
                         }
