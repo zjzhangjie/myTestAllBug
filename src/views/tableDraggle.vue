@@ -82,7 +82,6 @@
                         applyTableColWidths.push(applyTableCol[i].width)
                     }
                     console.log(applyTableColWidths)
-                //    localStorage.setItem('applyTableColWidths', JSON.stringify(applyTableColWidths))
                 }, 100)
             } ,
         },
@@ -93,10 +92,6 @@
                 vm.dscPartData = vm.$store.state.documentStore.dataList;
             vm.$store.state.documentStore.dataList='阿拉蕾'
                 console.log( vm.$store.state.documentStore.dataList);
-           // vm.$store.store.dispatch('setUserList',item);
-            // vm.$store.dispatch('getAllData', obj).then(function () {
-            //     vm.dscPartData = vm.$store.state.documentStore.dataList;
-            // })
         }
     }
 
