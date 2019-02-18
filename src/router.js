@@ -42,6 +42,15 @@ export default new Router({
           path: '/resourcesOver',
           name: 'resourcesOver',
           component: () => import('./views/resourcesOver.vue')
+      },{
+          path: '/networkPlanning',
+          name: 'networkPlanning',
+          component: () => import('./views/networkPlanning.vue')
+      },{
+          path: '/zrender',
+          name: 'v',
+          component: () => import('./views/zrender.vue')
       }
+
   ]
 })
