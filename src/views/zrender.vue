@@ -7,6 +7,7 @@
 
 <script>
     import zrender from 'zrender';
+    import debounce from "lodash.debounce";
     export default {
         name: "zrender",
         data(){
@@ -76,7 +77,8 @@
                         duration:15,
                     }
                 ],
-                scale:1
+                scale:2,//放大缩小的速度
+                cardSize:50,//事件点的宽度
 
             }
         },
@@ -85,50 +87,46 @@
               window.addEventListener('mousewheel',this.handleScroll,false)
         },
         methods:{
-            handleScroll (e) {
-                let direction = e.deltaY>0?'down':'up' //该语句可以用来判断滚轮是向上滑动还是向下
+            //监听鼠标事件
+            handleScroll:debounce(function (e) {
+                let vm=this
+                let direction = e.deltaY>0?'down':'up' ;//该语句可以用来判断滚轮是向上滑动还是向下
                 if(direction=='down'){
-                    this.scale=this.scale*2
-                    console.log("滚轮向下啦")
+                    if(vm.cardSize<20){return}
+                    vm.cardSize=vm.cardSize-vm.scale;
+                    vm.initTime()
                 }else{
                     console.log("滚轮向上啦")
+                    if(vm.cardSize>=50){return}
+                    this.cardSize=this.cardSize+vm.scale;
+                    vm.initTime()
                 }
-                // if(document.getElementsByTagName("li").length == 1){   //此处决定无论一次滚轮滚动的距离是多少，此事件
-                //     //都得等上次滚动结束，才会执行本次
-                //     this.isShow = false
-                //     setTimeout(() => {
-                //         this.isShow = true
-                //         ++ this.nowIndex
-                //         if(this.nowIndex == 3){
-                //             this.nowIndex = 0
-                //         }
-                //     }, 10)
-                // }
-            },
+            },10),
+            //初始化画布
             initCanvas(){
               var zr = zrender.init(document.getElementById('main'));
               return zr
             },
+            //初始化时间
             initTime(){
              let vm=this;
              let zr = this.initCanvas();
-             var cardSize =50;//宽高是50
-             let day=30;
-             for(let j=0;j<day/7;j++){//确定天数
+                 let day=30;
+                for(let j=0;j<day/7;j++){//确定周数
                     let text='第'+(j+1)+'周';
-                    let width=cardSize*7;
-                    let height=cardSize;
-                    vm.initRect(zr,j*cardSize*7,0,width,height,text)
+                    let width=vm.cardSize*7;
+                    let height=vm.cardSize;
+                    vm.initRect(zr,j*vm.cardSize*7,0,width,height,text)
              }
              for(let j=0;j<day;j++){//确定天数
                    let text=j+1;
-                   let width=cardSize;
-                   let height=cardSize;
-                   vm.initRect(zr,j*cardSize,30,width,height,text)
+                   let width=vm.cardSize;
+                   let height=vm.cardSize;
+                   vm.initRect(zr,j*vm.cardSize,vm.cardSize,width,height,text)
              }
              let task=vm.taskLists;
              for(let i=0;i<task.length;i++){
-                    vm.setPosition(zr,i,task[i],cardSize)//确定task的位置
+                    vm.setPosition(zr,i,task[i],vm.cardSize)//确定task的位置
                 }
             },
             //每个任务的位置
@@ -156,7 +154,6 @@
             initLine(zr,r,x1,x2,y,text){
                 var Line = new zrender.Line({
                     z:0,//z值大的会把z值小的覆盖
-                    scale:this.scale,
                     shape: {
                         x1: x1,
                         y1: y,
@@ -175,9 +172,9 @@
             },
             //画圆形
             initCircle(zr,cardSize,r,i,x,y,text){
-                var circle = new zrender.Circle({
+                let circle = new zrender.Circle({
                     z:1,
-                    scale:this.scale,
+                    silent: true,
                     shape: {
                         cx: x,
                         cy: y,
@@ -189,6 +186,14 @@
                         text:text
                     }
                 });
+                // circle.animate('shape', false)
+                //     .when(1000, {
+                //         cx: 100
+                //     })
+                //     .when(2000,{
+                //         cx: x
+                //     })
+                //     .start();
                 zr.add(circle);
             },
             //画箭头
@@ -253,9 +258,6 @@
 
                 zr.add(rect);
             },
-
-
-
         }
     }
 </script>
