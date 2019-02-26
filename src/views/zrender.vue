@@ -22,91 +22,84 @@
         name: "zrender",
         data(){
             return{
-                taskLists:[
+                taskTree:[
                     {
                         id:1,
-                        text:'任务一',
-                        start_time:2,
-                        end_time:17,
-                        link:0,
-                        link_type:'',//SS,SF,FS,FF
+                        text:'任务1',
+                        start_time:3,
+                        end_time:20,
                         duration:15,
                     },
                     {
                         id:2,
                         text:'任务2',
-                        start_time:16,
-                        end_time:20,
-                        link:0,
-                        link_type:'',//SS,SF,FS,FF
+                        start_time:12,
+                        end_time:15,
                         duration:4,
                     },
                     {
                         id:3,
                         text:'任务3',
-                        start_time:15,
-                        end_time:20,
-                        link:0,
-                        link_type:'SS',//SS,SF,FS,FF
-                        duration:5,
+                        start_time:6,
+                        end_time:10,
+                        duration:20,
                     },
                     {
                         id:4,
                         text:'任务4',
-                        start_time:16,
-                        end_time:18,
-                        link:0,
-                        link_type:'SS',//SS,SF,FS,FF
-                        duration:2,
+                        start_time:22,
+                        end_time:30,
+                        duration:20,
                     },
                     {
                         id:5,
                         text:'任务5',
-                        start_time:16,
-                        end_time:26,
-                        link:0,
-                        link_type:'SS',//SS,SF,FS,FF
-                        duration:10,
-                    },
-                    {
+                        start_time:3,
+                        end_time:15,
+                        duration:20,
+                    },   {
                         id:6,
                         text:'任务6',
-                        start_time:15,
+                        start_time:17,
                         end_time:20,
-                        link:2,
-                        link_type:'SS',//SS,SF,FS,FF
-                        duration:5,
+                        duration:20,
                     },
                     {
                         id:7,
                         text:'任务7',
-                        start_time:2,
-                        end_time:30,
-                        link:1,
-                        link_type:'SS',//SS,SF,FS,FF
-                        duration:15,
+                        start_time:4,
+                        end_time:20,
+                        duration:20,
                     },
                     {
-                        id:7,
+                        id:8,
                         text:'任务8',
-                        start_time:2,
-                        end_time:30,
-                        link:0,
-                        link_type:'SS',//SS,SF,FS,FF
-                        duration:15,
-                    }
+                        start_time:18,
+                        end_time:21,
+                        duration:20,
+                    },
+
+
                 ],
                 links:[{
                     id:123,
                     source:1,
                     target:2,
-                    type:0//开始-开始
+                    type:0,//fs
+                    lag:6
                 },{
                     id:456,
                     source:1,
                     target:3,
-                    type:0//开始-开始
-                }
+                    type:0,//fs
+                    lag:10
+                },{
+                    id:456,
+                    source:5,
+                    target:7,
+                    type:1,//ss
+                    lag:10
+                    }
                 ],
                 scale:2,//放大缩小的速度
                 cardSize:50,//事件点的宽度
@@ -114,7 +107,11 @@
                 Y: 0,
                 L: 0,
                 T: 0,
-
+                n:0,//任务占的行数
+                taskTreeMap:{},//树形map
+                dots:[],
+                zr:null,
+                zrg:null,
             }
         },
         computed: {
@@ -126,7 +123,7 @@
             }
         },
         mounted(){
-              this.initTime()
+            this.initTime()
             //  window.addEventListener('mousewheel',this.handleScroll,false)
         },
         methods:{
@@ -139,7 +136,6 @@
                     vm.cardSize=vm.cardSize-vm.scale;
                     vm.initTime()
                 }else{
-                    console.log("滚轮向上啦")
                     if(vm.cardSize>=50){return}
                     this.cardSize=this.cardSize+vm.scale;
                     vm.initTime()
@@ -147,14 +143,14 @@
             },10),
             //监听鼠标拖动事件
             mousedown($event){
-                console.log($event)
+                console.log($event);
                 let vm=this;
                 vm.initMove($event);
                 window.addEventListener('mousemove', vm.mousemove);
                 window.addEventListener('mouseup', vm.moveEnd);
             },
             initMove(e){
-                let vm=this
+                let vm=this;
                 let dv = this.$refs.myCanvas;
                 vm.X = e.clientX;
                 vm.Y = e.clientY;
@@ -177,120 +173,262 @@
             },
             //初始化画布
             initCanvas(){
-              var zr = zrender.init(document.getElementById('main'));
-              return zr
+                let vm=this
+                var zr = zrender.init(document.getElementById('main'));
+                vm.zr =zr;
+                vm.zrg=new zrender.Group();
+                return zr
             },
             //初始化时间
-            initTime(){
-             let vm=this;
-             let zr = this.initCanvas();
-             let day=30;
-             for(let j=0;j<day/7;j++){//确定周数
-                    let text='第'+(j+1)+'周';
-                    let width=vm.cardSize*7;
-                    let height=vm.cardSize;
-                    vm.initRect(zr,j*vm.cardSize*7,0,width,height,text)
-             }
-             for(let j=0;j<day;j++){//确定天数
-                   let text=j+1;
-                   let width=vm.cardSize;
-                   let height=vm.cardSize;
-                   vm.initRect(zr,j*vm.cardSize,vm.cardSize,width,height,text)
-             }
-             let task=vm.taskLists;
-             for(let i=0;i<task.length;i++){
-                    vm.setPosition(zr,i,task[i],vm.cardSize)//确定task的位置
+            initTime() {
+                let vm = this;
+                let zr = this.initCanvas();
+                let day = 30;
+                for (let j = 0; j < day / 7; j++) {//确定周数
+                    let text = '第' + (j + 1) + '周';
+                    let width = vm.cardSize * 7;
+                    let height = vm.cardSize;
+                    vm.initRect(zr, j * vm.cardSize * 7, 0, width, height, text)
                 }
+                for (let j = 0; j < day; j++) {//确定天数
+                    let text = j + 1;
+                    let width = vm.cardSize;
+                    let height = vm.cardSize;
+                    vm.initRect(zr, j * vm.cardSize, vm.cardSize, width, height, text)
+                }
+                vm.initTask();
+                vm.initRelations();
+                vm.drawTasks();//画任务
+                vm.drawRelations();//画前置任务
             },
-            //每个任务的位置
-            setPosition(zr,i,item,cardSize){
+            initTask(){
+                //计划y
                 let vm=this;
-                let x1=item.start_time*cardSize-cardSize;
-                let y=2*cardSize+30+(40*i)//距离顶部有30的距离
-                let x2=item.end_time*cardSize;
-                let r=10;
-                if(item.link==0){
-                    vm.noPretask(i,zr,cardSize,item,r,x1,x2,y);
-                }else{
-                    if(item.link_type=='SS'){
-                        let dash=3;//虚线的密度
-                        let info=vm.preTaskPosition(item.link);
-                        let index=info.index
-                        let preItem=info.item
-                        let x1_pre=preItem.start_time*cardSize-cardSize;
-                        let y1_pre=2*cardSize+30+(30*index);
-                        let x2_pre=preItem.end_time*cardSize;
-                        let y2_pre=preItem.end_time*cardSize;
-                        let text=preItem.text;
-                        //虚线
-                        vm.initLineDash(zr,x1_pre,y1_pre,x1,y,x2,y)
-                        //实线
-                        text=item.text;
-                        let color="red";
-                        vm.initLine(zr,r,x1,x2,y,text,color);
-                        //箭头
-                        vm.initArraw(zr,r,x2,y,color);
-                        //结束的圆圈
-                        let text_end=vm.taskLists.length+i+1;
-                        vm.initCircle(zr,cardSize,r,i,x2,y,text_end,color);
+                for(let i = 0; i < vm.taskTree.length; i++) {
+                    let task = vm.taskTree[i];
+                    vm.calcRow(task,vm.taskTree,1);
+                    vm.dots.push(task.start_time);
+                    vm.dots.push(task.end_time);
+                    vm.taskTreeMap[task.id] = task;
+                }
+                console.log(vm.taskTree);
+                console.log(vm.dots);
+                console.log(vm.taskTreeMap);
+            },
+            //计算Row
+            calcRow(currentTask,task=[],row){
+                for(let i=0;i<task.length;i++){
+                    let rowTasks=this.getRowTasks(row,task);
+                    let only=this.checkOnlyInRow(currentTask,rowTasks);//没有重复的
+                    if(only){
+                        currentTask.row=row;
+                        break;
+                    }else{
+                        this.calcRow(currentTask,task,++row);
                     }
-
                 }
-
             },
-            havePretask(i,zr,cardSize,item,r,x1,x2,y){
-
-
+            //寻找row task
+            getRowTasks:function (row,tasks) {
+                return tasks.filter(function (value) {
+                    return value.row==row;
+                });
             },
-            //得到target的坐标位置
-            //返回前任务的位置
-            preTaskPosition(id){
-                let vm=this;
-                let list=vm.taskLists;
-                for(let i=0;i<list.length;i++){
-                    if(id==list[i].id){
-                        let info={
-                            item:list[i],
-                            index:i
+            //检测该数据是否再该行唯一
+            checkOnlyInRow:function(task,rowTask,type="T") {
+                let x1=task.start_time;
+                let x2=task.end_time;
+                let only=true;//唯一
+                for(let i=0;i<rowTask.length;i++){
+                    let btask=rowTask[i];
+                    if(task.id==btask.id){
+                        continue;
+                    }
+                    let bx1=btask.start_time;
+                    let bx2=btask.end_time;
+                    //区间内存在交际
+                    if(type=='T'){
+                        if(!(x1>bx2||x2<bx1)){
+                            only=only&&false;
+                            break;
                         }
-                        return info
+                    }else{
+                        if(!(x1>=bx2||x2<=bx1)){
+                            only=only&&false;
+                            break;
+                        }
                     }
                 }
+                return only;
             },
-            //当前任务没有前置任务的时候
-            noPretask(i,zr,cardSize,item,r,x1,x2,y){
-                let vm=this
-                //开始的圆圈
-                let text=i+1;
-                vm.initCircle(zr,cardSize,r,i,x1,y,text);
-                //结束的圆圈
-                let text_end=vm.taskLists.length+i+1;
-                vm.initCircle(zr,cardSize,r,i,x2,y,text_end);
-                //实线
-                text=item.text;
-                vm.initLine(zr,r,x1,x2,y,text);
-                text=item.duration;
-                vm.initText(zr,r,x1,y,text);
-                //箭头
-                vm.initArraw(zr,r,x2,y);
+            //绘制TaskTree
+            drawTasks:function(){
+                let vm=this;
+                for(let i=0;i<vm.taskTree.length;i++){
+                    let task=vm.taskTree[i];
+                    vm.zrg.add(vm.drawTaskInfo(task,i));
+                    console.log(vm.zrg)
+                }
+                this.zr.add(vm.zrg);
+            },
+            //绘制任务
+            drawTaskInfo(task,i){
+                let vm=this;
+                let x1=task.start_time*vm.cardSize;
+                let x2=task.end_time*vm.cardSize;
+                let y=task.row*vm.cardSize+2*vm.cardSize;
+                let r=10;
+                let color='black';
+                //组合
+                let taskGroup=new zrender.Group();
+                let Line=vm.initLine(r,x1,x2,y,task.text,color="black");
+                let LineBottomText=vm.initText(r,x1,y,task.duration);
+                let LineIsogon=vm.initArraw(r,x2-2*r+5,y)//三角形
+                //三角形旋转
+                LineIsogon.attr('origin',[x2-2*r+5,y]);
+                LineIsogon.attr('rotation',(Math.PI/180)*30);
+                let  preDot=vm.initCircle(r,x1,y,i+1,color="black");
+                let  postDot=vm.initCircle(r,x2,y,i+1,color="black")
+                taskGroup.id=i;
+                taskGroup.add(Line);
+                taskGroup.add(LineBottomText);
+                taskGroup.add(LineIsogon);
+                taskGroup.add(preDot);
+                taskGroup.add(postDot);
+                return taskGroup
+            },
+            initRelations(){
+                let vm=this;
+                for(let i=0;i<vm.links.length;i++){
+                    let link=vm.links[i];
+                    let targetTask=vm.taskTreeMap[link.target];
+                    let dots=vm.calcReletionDots(link,vm.taskTree,targetTask.row);
+                    link.dots=dots;
+                    console.info(link)
+                }
+            },
+            //计算折线点  0:fs,1:ss,2:ff,3:sf
+            calcReletionDots:function(link,task=[],row){//第一条的时候
+                let vm=this;
+                let dots=[];
+                let sourceTask=vm.taskTreeMap[link.source];
+                let targetTask=vm.taskTreeMap[link.target];
+                let caleTime={};
+                let len=vm.cardSize;
+                let dot1={x:sourceTask.end_time*len, y:sourceTask.row*len+2*len};
+                let dot2={x:sourceTask.end_time*len, y:row*len+2*len};
+                let dot3={x:targetTask.start_time*len, y:row*len+2*len};
+                let dot4={x:targetTask.start_time*len, y:targetTask.row*len+2*len};
+                if(link.type==0){
+                     caleTime={
+                        start:sourceTask.end_time,
+                        end:targetTask.start_time}
+                }else if(link.type==1){
+                    caleTime={
+                        start:sourceTask.start_time,
+                        end:targetTask.start_time};
+                     dot1={x:sourceTask.start_time*len, y:sourceTask.row*len+2*len};
+                     dot2={x:sourceTask.start_time*len, y:row*len+2*len};
+                     dot3={x:targetTask.start_time*len, y:row*len+2*len};
+                     dot4={x:targetTask.start_time*len, y:targetTask.row*len+2*len};
+                }
+                for(let i=0;i<task.length;i++){
+                    let rowTasks=this.getRowTasks(row,task);//当前行的所有任务
+                    let only=this.checkOnlyInRow(caleTime,rowTasks,'R');
+                    if(only){//
+                        dots.push([dot1.x,dot1.y]);//起点
+                        dots.push([dot2.x,dot2.y]);//折点1
+                        dots.push([dot3.x,dot3.y]);//折点2
+                        dots.push([dot4.x,dot4.y]);//终点
+                    }else{
+                        return vm.calcReletionDots(link,task,++row);
+                    }
+                    return dots;
+                }
+            },
+            //判断关联的类型
 
+            //绘制Relations
+            drawRelations:function () {
+                let vm=this;
+                for(let i=0;i<vm.links.length;i++){
+                    let link=vm.links[i];
+                    vm.zrg.add(vm.drawRelationInfo(link));
+                }
+                this.zr.add(vm.zrg);
             },
-            //画虚线的折线
-            initLineDash(zr,x1,y1,x2,y2,x3,y3){
+            drawRelationInfo:function (relation) {
+                let vm=this;
+                let dots=relation.dots;
+                let drawDots=[];
+                //组合
+                var relationGroup=new zrender.Group();
+                for(let i=0;i<dots.length;i++){
+                    let dot=dots[i];
+                    drawDots.push([dot[0],dot[1]]);
+                }
+                //折线
+                let polyLine=vm.initLineDash(drawDots,relation.lag)
+                //绘制三角形
+                let dots3=drawDots[2];
+                let dots4=drawDots[3];
+                let x=dots4[0];
+                let y=dots4[1];
+                let r=vm.r
+                let color='red';
+                let LineIsogon=vm.initArraw(r,x,y+2*9,color);
+                //三角形旋转
+                LineIsogon.attr('origin',[x,y+2*10]);
+                //同层向左
+                if(dots3[1]==dots4[1]){
+                    LineIsogon.attr('rotation',(Math.PI/180)*30);
+                }
+                //向下
+                if(dots3[1]<dots4[1]){
+                    LineIsogon.attr('rotation',(Math.PI/180)*180);
+                }
+                relationGroup.add(polyLine);
+                relationGroup.add(LineIsogon);
+                return relationGroup;
+            },
+            //绘制折线
+            initLineDash(points,text){
                 var polyline = new zrender.Polyline({
                     z:0,//z值大的会把z值小的覆盖
                     shape: {
-                        points:[[x1,y1],[x2,y2],[x3,y3]]
+                        points:points
                     },
                     style: {
+                        text:text,
+                        textAlign:'center',
+                        textPosition:'bottom',
+                        textFill:'green',
                         stroke:'red',
-                        lineDash:[1,3]
+                        lineDash:[6,3]
                     },
                 });
-                zr.add(polyline);
+             return polyline
+            },
+            //画三角形
+            initArraw(r,x,y,color='black'){
+                var LineIsogon = new zrender.Isogon({
+                    z:3,//z值大的会把z值小的覆盖
+                    shape: {
+                        x:x,
+                        y: y,
+                        r:5,
+                        n:3
+                    },
+                    style:{
+                        fill:color,
+                        stroke: color
+                    },
+                    name:'LineIsogon'
+                });
+                return LineIsogon
             },
             //画实线
-            initLine(zr,r,x1,x2,y,text,color="black"){
+            initLine(r,x1,x2,y,text,color="black"){
                 var Line = new zrender.Line({
                     z:0,//z值大的会把z值小的覆盖
                     shape: {
@@ -303,14 +441,16 @@
                         fill:color,
                         stroke:color,
                         text:text,
+                        textFill: 'blue',
                         textPosition:'top',
                     },
+                    name:'Line'
                 });
-                zr.add(Line);
-
+                return Line
+             //   zr.add(Line);
             },
             //画圆形
-            initCircle(zr,cardSize,r,i,x,y,text,color="black"){
+            initCircle(r,x,y,text,color="black"){
                 let circle = new zrender.Circle({
                     z:1,
                     silent: true,
@@ -324,37 +464,14 @@
                         stroke: color,
                         text:text
                     },
-                    id:i
+                    name:'circle'
                 });
-                // circle.animate('shape', false)
-                //     .when(1000, {
-                //         cx: 100
-                //     })
-                //     .when(2000,{
-                //         cx: x
-                //     })
-                //     .start();
-                zr.add(circle);
-                console.log("圆id:"+circle.id);
-            },
-            //画箭头
-            initArraw(zr,r,x,y,color="black"){
-                var polygon = new zrender.Polygon({
-                    z:1,
-                    shape: {
-                        points:[[x-r*2,y-r],[x-r*2,y+r],[x-r,y]]
-                    },
-                    style: {
-                        fill:color,
-                        stroke: color,
-                    },
-
-                });
-                zr.add(polygon);
+              return circle
+               // console.log("圆id:"+circle.id);
             },
             //画文本
-            initText(zr,r,x1,y,text){
-                var t1 = new zrender.Text({
+            initText(r,x1,y,text){
+                var Text = new zrender.Text({
                     style: {
                         text: '工期'+text,
                         textVerticalAlign: 'middle',
@@ -363,9 +480,11 @@
                         textFill: 'blue',
                         blend: 'lighten'
                     },
-                    position: [x1+r, y+r*2]
+                    position: [x1+r, y+r*2],
+                    name:'Text'
                 });
-                zr.add(t1);
+                return Text
+              //  zr.add(t1);
             },
             //画矩形
             initRect(zr,x,y,width,height,text){
@@ -413,10 +532,10 @@
         }
     }
     /*.box {*/
-        /*position: fixed;*/
-        /*z-index: 100;*/
-        /*width: 200px;*/
-        /*height: 80px;*/
-        /*background-color: #b2dba1;*/
+    /*position: fixed;*/
+    /*z-index: 100;*/
+    /*width: 200px;*/
+    /*height: 80px;*/
+    /*background-color: #b2dba1;*/
     /*}*/
 </style>
