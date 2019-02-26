@@ -83,11 +83,17 @@
                     target:'1-2',
                     type:0,//FS:0 SS:1 FF:2 SF:3
                     lag:10
-                },
-                    {
+                },{
                         id:'f-2',
                         source:'1-1',
                         target:'1-2-3',
+                        type:0,//FS:0 SS:1 FF:2 SF:3
+                        lag:10
+                    },
+                    {
+                        id:'f-2',
+                        source:'1-2',
+                        target:'1-4',
                         type:0,//FS:0 SS:1 FF:2 SF:3
                         lag:10
                     }],
