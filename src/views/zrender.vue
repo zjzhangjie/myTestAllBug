@@ -1,5 +1,22 @@
 <template>
     <div class="zrender">
+        <div class="time-container"  id="time" ref="time">
+            <!--<div class="common-time">-->
+                <!--<div class="year common-time-inner" v-for="item in year"  v-bind:style="{width:item.width+'px'}" >-->
+                    <!--{{item.year}}年-->
+                <!--</div>-->
+            <!--</div>-->
+            <div class="common-time">
+                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:item.width+'px'}" >
+                  {{item.year}}年{{item.month}}月
+                </div>
+            </div>
+            <div class="common-time">
+                <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
+                    {{item.day}}
+                </div>
+            </div>
+        </div>
         <div class="container" style="width:1500px;height:500px;">
             <div   :style="style"
                    ref="myCanvas"
@@ -11,13 +28,13 @@
             >
             </div>
         </div>
-
     </div>
 </template>
 
 <script>
     import zrender from 'zrender';
     import debounce from "lodash.debounce";
+    import  common from '../tools/common'
     export default {
         name: "zrender",
         data(){
@@ -110,7 +127,6 @@
                     }
                 ],
                 scale:2,//放大缩小的速度
-                cardSize:50,//事件点的宽度
                 X: 0,
                 Y: 0,
                 L: 0,
@@ -121,6 +137,17 @@
                 dots:[],
                 zr:null,
                 zrg:null,
+                start_time:1521043200000,//2018.3.15
+                end_time:1606456527000,//2019.11.27
+                year:[],
+                month:[],
+                week:[],
+                day:[],
+                yearWidth:0,
+                monthWidth:0,
+                dayWidth:50,
+                cardSize:50,//事件点的宽度
+                timeMap:{}
             }
         },
         computed: {
@@ -132,10 +159,200 @@
             }
         },
         mounted(){
-            this.initTime()
-            //  window.addEventListener('mousewheel',this.handleScroll,false)
+            this.initTime();
+            this.$nextTick(function() {
+                this.caleTime()
+            },1000);
+
         },
         methods:{
+            //表头的日历
+            //格式化时间
+            caleTime(){
+              let vm=this;
+              // let start_time= vm.formatTime(vm.start_time);
+              // let end_time= vm.formatTime(vm.end_time);
+                let start_time='2018-12-15';
+                let end_time='2019-2-28';
+              var s1 = start_time.replace(/-/g, "/");
+              var s2 = end_time.replace(/-/g, "/");
+              let d1 = new Date(s1);
+              let d2 = new Date(s2);
+              var time= d2.getTime() - d1.getTime();
+              var days = parseInt(time / (1000 * 60 * 60 * 24));
+              console.log(days);
+              let array1 = start_time.split('-');
+              let array2 = end_time.split('-');
+              let month1 = parseInt(array1[1]);
+              let month2 = parseInt(array2[1]);
+              let year1 = parseInt(array1[0]);
+              let year2 = parseInt(array2[0]);
+              let day1 = parseInt(array1[2]);
+              let day2 = parseInt(array2[2]);
+              console.log(start_time);
+              console.log(end_time);
+              vm.caleYear(year1,year2);
+              vm.caleMonth(month1,month2);
+              vm.caleDay(day1,day2);
+              vm.caleWeek();
+              vm.caleWidth();
+
+            },
+            caleYear(year1,year2){
+                let vm=this;
+                let len=year2-year1+1;
+                let obj={};
+                for(let i=0;i<len;i++){
+                    if(year1<=year2){
+                        obj={
+                            year:year1,
+                            width:0,
+                        };
+                        vm.year.push(obj);
+                        year1=year1+1;
+                    }
+                }
+            },
+            caleMonth(month1,month2){
+                let vm=this;
+                let len= vm.year.length;
+                let obj={};
+                for(let i=0;i<vm.year.length;i++){
+                    if(i==0){
+                        for (let j=month1-1;j<12;j++) {
+                            obj={
+                                year:vm.year[i].year,
+                                month:j+1,
+                                width:0
+                            }
+                            vm.month.push(obj)
+                        }
+                    }else if(i==len-1){
+                        for (let j = 0; j < 12; j++) {
+                                let num =j+1;
+                                if (num <= month2) {
+                                    obj={
+                                        year:vm.year[i].year,
+                                        month:num,
+                                        width:0
+                                    }
+                                    vm.month.push(obj)
+                                }
+                            }
+                    }else{
+                        for (let j = 0; j < 12; j++) {
+                                obj={
+                                    year:vm.year[i].year,
+                                    month:j + 1,
+                                    width:0
+                                }
+                                vm.month.push(obj)
+                            }
+                        }
+
+                }
+            },
+            caleDay(day1,day2){
+                let vm=this;
+                let obj={};
+                for(let i=0;i<vm.month.length;i++){
+                    let item=vm.month[i];
+
+                    if(i==0){
+                        vm.resetDay(obj,item,day1-1)
+                    }else if(i==vm.month.length-1){
+                        vm.resetDay(obj,item,0,day2)
+                    }else{
+                        vm.resetDay(obj,item,0)
+                    }
+                }
+              console.log(vm.day);
+              console.log(vm.month)
+            },
+            resetDay(obj,item,day,end=0){
+                let vm=this;
+                if(item.month==1||item.month==3||
+                    item.month==5||item.month==7||
+                    item.month==8||item.month==10||
+                    item.month==12){
+                    if(end==0){end=31}
+                    item.width=(end-day)*vm.cardSize;
+                    item.length=end-day;
+                    item.day=[];
+                    for(let j=day;j<end;j++){
+                       item.day.push(j+1);
+                        obj={year:item.year, month: item.month,day:j+1};vm.day.push(obj)
+                    }
+                }else if(item.month==2){
+                    if(item.year%4==0){
+                        if(end==0){end=29}
+                        item.width=(end-day)*vm.cardSize;
+                        item.length=end-day;
+                        item.day=[];
+                        for(let j=day;j<end;j++){
+                           item.day.push(j+1);
+                            obj={year:item.year, month: item.month,day:j+1};vm.day.push(obj)
+                        }
+                    }else{
+                        if(end==0){end=28}
+                        item.width=(end-day)*vm.cardSize;
+                        item.length=end-day;
+                        item.day=[];
+                        for(let j=day;j<end;j++){
+                        item.day.push(j+1);
+                            obj={year:item.year, month: item.month,day:j+1};vm.day.push(obj)
+                        }
+                    }
+                }else{
+                    if(end==0){end=30}
+                    item.width=(end-day)*vm.cardSize;
+                    item.length=end-day;
+                    item.day=[];
+                    for(let j=day;j<30;j++){
+                        item.day.push(j+1);
+                        obj={day:j+1};vm.day.push(obj)
+                    }
+                }
+            },
+            caleWeek(){},
+            //计算宽度
+            caleWidth(){
+                let vm=this;
+                $("#time").width(vm.day.length*vm.cardSize);
+                let width=0;
+                //计算年的宽度
+                // for(let i=0;i<vm.month.length;i++){
+                //    for(let j=0;j<vm.year.length;j++){
+                //        if(vm.year[j].year==vm.month[i].year){
+                //          vm.year[i].width=vm.year[i].width+vm.month[i].width;
+                //        }
+                //   }
+                //  }
+               if(vm.cardSize==20){
+                   vm.twoDay();
+                }
+                //计算月的宽度
+                // for(let i=0;i<vm.month.length;i++){
+                //     vm.month[i].width=vm.month[i].length*vm.cardSize
+                // }
+                console.log(vm.cardSize);
+                console.log(vm.year);
+            },
+            //时隔两天
+            twoDay(){
+                let vm=this;
+                for(let i=0;i<vm.day.length;i++){
+                    let item=vm.day[i].day;
+                    if(i!==0&&item%2==0){
+                        vm.day.splice(i,1)
+                    }
+                }
+                vm.cardSize=40;
+                console.log(vm.cardSize)
+            },
+            formatTime(time) {
+                return common.formateTimestamp(time, "YYYY-MM-DD");
+            },
             //监听鼠标事件
             handleScroll:debounce(function (e) {
                 let vm=this;
@@ -143,10 +360,12 @@
                 if(direction=='down'){
                     if(vm.cardSize<20){return}
                     vm.cardSize=vm.cardSize-vm.scale;
+                    vm.caleWidth();
                     vm.initTime()
                 }else{
-                    if(vm.cardSize>=50){return}
+                    if(vm.cardSize>=70){return}
                     this.cardSize=this.cardSize+vm.scale;
+                    vm.caleWidth();
                     vm.initTime()
                 }
             },10),
@@ -175,6 +394,7 @@
                 // 代码关键处
                 vm.$refs.myCanvas.style.left = nl + 'px';
                 vm.$refs.myCanvas.style.top = nt + 'px';
+                vm.$refs.time.style.left = nl + 'px';
             },
             moveEnd(e){
                 window.removeEventListener('mousemove', this.mousemove);
@@ -182,7 +402,7 @@
             },
             //初始化画布
             initCanvas(){
-                let vm=this
+                let vm=this;
                 var zr = zrender.init(document.getElementById('main'));
                 vm.zr =zr;
                 vm.zrg=new zrender.Group();
@@ -193,18 +413,18 @@
                 let vm = this;
                 let zr = this.initCanvas();
                 let day = 30;
-                for (let j = 0; j < day / 7; j++) {//确定周数
-                    let text = '第' + (j + 1) + '周';
-                    let width = vm.cardSize * 7;
-                    let height = vm.cardSize;
-                    vm.initRect(zr, j * vm.cardSize * 7, 0, width, height, text)
-                }
-                for (let j = 0; j < day; j++) {//确定天数
-                    let text = j + 1;
-                    let width = vm.cardSize;
-                    let height = vm.cardSize;
-                    vm.initRect(zr, j * vm.cardSize, vm.cardSize, width, height, text)
-                }
+                // for (let j = 0; j < day / 7; j++) {//确定周数
+                //     let text = '第' + (j + 1) + '周';
+                //     let width = vm.cardSize * 7;
+                //     let height = vm.cardSize;
+                //     vm.initRect(zr, j * vm.cardSize * 7, 0, width, height, text)
+                // }
+                // for (let j = 0; j < day; j++) {//确定天数
+                //     let text = j + 1;
+                //     let width = vm.cardSize;
+                //     let height = vm.cardSize;
+                //     vm.initRect(zr, j * vm.cardSize, vm.cardSize, width, height, text)
+                // }
                 vm.initTask();
                 vm.initRelations();
                 vm.drawTasks();//画任务
@@ -242,7 +462,6 @@
                     }
                     vm.dots[i]=obj;
                 }
-                console.log(vm.dots);
             },
             //计算Row
             calcRow(currentTask,task=[],row){
@@ -296,7 +515,6 @@
                 for(let i=0;i<vm.taskTree.length;i++){
                     let task=vm.taskTree[i];
                     vm.zrg.add(vm.drawTaskInfo(task,i));
-                    console.log(vm.zrg)
                 }
                 this.zr.add(vm.zrg);
             },
@@ -305,7 +523,7 @@
                 let vm=this;
                 let x1=task.start_time*vm.cardSize;
                 let x2=task.end_time*vm.cardSize;
-                let y=task.row*vm.cardSize+2*vm.cardSize;
+                let y=task.row*vm.cardSize;
                 let r=10;
                 let color='black';
                 //组合
@@ -348,7 +566,6 @@
                     let targetTask=vm.taskTreeMap[link.target];
                     let dots=vm.calcReletionDots(link,vm.taskTree,targetTask.row);
                     link.dots=dots;
-                    console.info(link)
                 }
             },
             //计算折线点  0:fs,1:ss,2:ff,3:sf
@@ -363,30 +580,30 @@
                 let t_x2=targetTask.end_time;
                 let caleTime={};
                 let len=vm.cardSize;
-                let dot1={x:s_x2*len, y:sourceTask.row*len+2*len};
-                let dot2={x:s_x2*len, y:row*len+2*len};
-                let dot3={x:t_x1*len, y:row*len+2*len};
-                let dot4={x:t_x1*len, y:targetTask.row*len+2*len};
+                let dot1={x:s_x2*len, y:sourceTask.row*len};
+                let dot2={x:s_x2*len, y:row*len};
+                let dot3={x:t_x1*len, y:row*len};
+                let dot4={x:t_x1*len, y:targetTask.row*len};
                 if(link.type==0){//fs
                      caleTime={start:s_x2, end:t_x1}
                 }else if(link.type==1){//ss
                      caleTime={start:s_x1, end:t_x1};
-                     dot1={x:s_x1*len, y:sourceTask.row*len+2*len};
-                     dot2={x:s_x1*len, y:row*len+2*len};
-                     dot3={x:t_x1*len, y:row*len+2*len};
-                     dot4={x:t_x1*len, y:targetTask.row*len+2*len};
+                     dot1={x:s_x1*len, y:sourceTask.row*len};
+                     dot2={x:s_x1*len, y:row*len};
+                     dot3={x:t_x1*len, y:row*len};
+                     dot4={x:t_x1*len, y:targetTask.row*len};
                 }else if(link.type==2){//ff
                     caleTime={start:s_x2, end:t_x2};
-                    dot1={x:s_x2*len, y:sourceTask.row*len+2*len};
-                    dot2={x:s_x2*len, y:row*len+2*len};
-                    dot3={x:t_x2*len, y:row*len+2*len};
-                    dot4={x:t_x2*len, y:targetTask.row*len+2*len};
+                    dot1={x:s_x2*len, y:sourceTask.row*len};
+                    dot2={x:s_x2*len, y:row*len};
+                    dot3={x:t_x2*len, y:row*len};
+                    dot4={x:t_x2*len, y:targetTask.row*len};
                 } else if(link.type==3){//sf
                     caleTime={start:s_x1, end:t_x2};
-                    dot1={x:s_x1*len, y:sourceTask.row*len+2*len};
-                    dot2={x:s_x1*len, y:row*len+2*len};
-                    dot3={x:t_x2*len, y:row*len+2*len};
-                    dot4={x:t_x2*len, y:targetTask.row*len+2*len};
+                    dot1={x:s_x1*len, y:sourceTask.row*len};
+                    dot2={x:s_x1*len, y:row*len};
+                    dot3={x:t_x2*len, y:row*len};
+                    dot4={x:t_x2*len, y:targetTask.row*len};
                 }
                 for(let i=0;i<task.length;i++){
                     let rowTasks=this.getRowTasks(row,task);//当前行的所有任务
@@ -403,7 +620,6 @@
                 }
             },
             //判断关联的类型
-
             //绘制Relations
             drawRelations:function () {
                 let vm=this;
@@ -579,12 +795,44 @@
     .zrender{
         .container{
             position: fixed;
+            left:0;
             z-index: 200;
         }
         .main{
             border: 1px solid #000000;
             position: fixed;
             z-index: 100;
+            margin-top: 70px;
+        }
+        .time-container{
+            position: fixed;
+            left: 0;
+           // height: 60px;
+            color: #6b6b6b;
+            font-size: 12px;
+            border: 1px solid #CECECE;
+            .common-time{
+                display: flex;
+                flex-direction: row;
+                height: 19px;
+                border-bottom: 1px solid #CECECE;
+                .common-time-inner{
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    border-right: 1px solid #ebebeb;
+                }
+                .common-time-inner:last-child{
+                   border-right: none;
+                }
+                &:first-child{
+
+                }
+                &:last-child{
+                    border-bottom: none;
+                }
+            }
+
         }
     }
     /*.box {*/
