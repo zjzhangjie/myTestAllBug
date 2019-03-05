@@ -3,20 +3,20 @@
 *  props:{
 *    left:左右拖动的距离
 *    cardSize:放大缩小的比例
-     timer:缩放的比例
-     isReduce:是否缩小
+timer:缩放的比例
+isReduce:是否缩小
 *  }
 **/
 <template>
     <div>
-        <div class="time-container-row" :style="style">
-            <!--<div class="common-time">-->
-            <!--<div class="year common-time-inner" v-for="item in year"  v-bind:style="{width:item.width+'px'}" >-->
-            <!--{{item.year}}年-->
-            <!--</div>-->
-            <!--</div>-->
+        <div class="time-container-row" :style="style" id="time">
             <div class="common-time">
-                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.width)+'px'}" >
+            <div class="year common-time-inner" v-for="item in year" v-bind:style="{width:(item.length*cardSize)+'px'}">
+            {{item.year}}年
+            </div>
+            </div>
+            <div class="common-time">
+                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
                     {{item.year}}年{{item.month}}月
                 </div>
             </div>
@@ -26,18 +26,6 @@
                 </div>
             </div>
         </div>
-        <!--<div  :style="style" class="time-container"  @mousewheel="handleScroll($event)"  id="time" ref="time">-->
-            <!--<div class="common-time">-->
-                <!--<div  v-for="item in month" class="common-time-item">-->
-                    <!--<div class="month">{{item.year}}年{{item.month}}月</div>-->
-                    <!--<div class="common-time-inner">-->
-                        <!--<div class="day" v-for="i in item.day"  v-bind:style="{width:cardSize+'px'}" >-->
-                            <!--{{i}}-->
-                        <!--</div>-->
-                    <!--</div>-->
-                <!--</div>-->
-            <!--</div>-->
-        <!--</div>-->
     </div>
 
 </template>
@@ -85,32 +73,48 @@
                     return
                 }
                 vm.maxScaleWidth(newVal)
-            }
+            },
+            cardSize(newVal,oldVal){
+                if(newVal!==oldVal){
+                    this.caleWidth()
+                }
+
+            },
         },
         data(){
             return{
-                scale:2,//放大缩小的速度
-                X: 0,
-                Y: 0,
-                L: 0,
-                T: 0,
                 start_time:1521043200000,//2018.3.15
                 end_time:1606456527000,//2019.11.27
                 year:[],
                 month:[],
                 originMonth:[],
                 originDay:[],
+                originYear:[],
                 week:[],
                 day:[],
                 yearWidth:0,
                 monthWidth:0,
                 dayWidth:50,
                 timeMap:{},
+
                 twoList:[],
                 threeList:[],
                 fiveList:[],
                 sevenList:[],
                 tenList:[],
+
+                twoDay:[],
+                threeDay:[],
+                fiveDay:[],
+                sevenDay:[],
+                tenDay:[],
+
+                twoYear:[],
+                threeYear:[],
+                fiveYear:[],
+                sevenYear:[],
+                tenYear:[],
+
             }
         },
         mounted(){
@@ -124,23 +128,23 @@
                 let vm=this;
                 if(vm.cardSize==20){
                     if(newVal==2){
-                        vm.month= vm.twoList;
+                        vm.switchChange(2);
                         return
                     }
                     if(newVal==3){
-                        vm.month= vm.threeList;
+                        vm.switchChange(3);
                         return
                     }
                     if(newVal==5){
-                        vm.month= vm.fiveList;
+                        vm.switchChange(5);
                         return
                     }
                     if(newVal==7){
-                        vm.month= vm.sevenList;
+                        vm.switchChange(7);
                         return
                     }
                     if(newVal==10){
-                        vm.month= vm.tenList;
+                        vm.switchChange(10);
                         return
                     }
                 }
@@ -150,34 +154,72 @@
                 let vm=this;
                 if(vm.cardSize==70){
                     if(newVal==10){
-                        vm.month= vm.sevenList;
+                        vm.switchChange(7);
                         return
                     }
                     if(newVal==7){
-                        vm.month= vm.fiveList;
+                        vm.switchChange(5);
                         return
                     }
                     if(newVal==5){
-                        vm.month= vm.threeList;
+                        vm.switchChange(3);
                         return
                     }
                     if(newVal==3){
-                        vm.month= vm.twoList;
+                        vm.switchChange(2);
                         return
                     }
                     if(newVal==2){
-                        vm.month= vm.originMonth;
+                        vm.switchChange(0);
                         return
                     }
                 }
                 console.log(vm.cardSize);
+            },
+            switchChange(value){
+                let vm=this;
+                switch (value) {
+                    case 0:
+                        vm.month= vm.originMonth;
+                        vm.day=vm.originDay;
+                        vm.year=vm.originYear;
+                        console.log(vm.month);
+                        break;
+                    case 2:
+                        vm.month= vm.twoList;
+                        vm.day=vm.twoDay;
+                        vm.year=vm.twoYear;
+                        console.log(vm.month);
+                        break;
+                    case 3:
+                        vm.month= vm.threeList;
+                        vm.day=vm.threeDay;
+                        vm.year=vm.threeYear;
+                        break;
+                    case 5:
+                        vm.month= vm.fiveList;
+                        vm.day=vm.fiveDay;
+                        vm.year=vm.fiveYear;
+                        break;
+                    case 7:
+                        vm.month= vm.sevenList;
+                        vm.day=vm.sevenDay;
+                        vm.year=vm.sevenYear;
+                        break;
+                    case 10:
+                        vm.month= vm.tenList;
+                        vm.day=vm.tenDay;
+                        vm.year=vm.tenYear;
+                        break;
+
+                }
             },
             //表头的日历
             caleTime(){
                 let vm=this;
                 // let start_time= vm.formatTime(vm.start_time);
                 // let end_time= vm.formatTime(vm.end_time);
-                let start_time='2018-1-15';
+                let start_time='2019-1-20';
                 let end_time='2019-2-28';
                 var s1 = start_time.replace(/-/g, "/");
                 var s2 = end_time.replace(/-/g, "/");
@@ -201,7 +243,13 @@
                 vm.caleDay(day1,day2);
                 vm.caleWeek(year1,d1);
                 vm.caleChange();
+                vm.caleWidth()
 
+            },
+            //计算宽度
+            caleWidth(){
+                let vm=this;
+                $("#time").width(vm.day.length*vm.cardSize);
             },
             caleYear(year1,year2){
                 let vm=this;
@@ -211,7 +259,7 @@
                     if(year1<=year2){
                         obj={
                             year:year1,
-                            width:0,
+                            length:0
                         };
                         vm.year.push(obj);
                         year1=year1+1;
@@ -262,7 +310,6 @@
                 let obj={};
                 for(let i=0;i<vm.month.length;i++){
                     let item=vm.month[i];
-
                     if(i==0){
                         vm.resetDay(obj,item,day1-1)
                     }else if(i==vm.month.length-1){
@@ -271,10 +318,12 @@
                         vm.resetDay(obj,item,0)
                     }
                 }
-                console.log(vm.day);
-                console.log(vm.month);
+                vm.year=vm.changeYear(vm.day);//确定年的长度
                 vm.originMonth=JSON.parse(JSON.stringify(vm.month));
                 vm.originDay=JSON.parse(JSON.stringify(vm.day));
+                vm.originYear=JSON.parse(JSON.stringify(vm.year));
+                console.log(vm.day);
+                console.log(vm.month);
             },
             resetDay(obj,item,day,end=0){
                 let vm=this;
@@ -292,7 +341,8 @@
                         obj={year:item.year, month: item.month,day:day};vm.day.push(obj)
                     }
                 }else if(item.month==2){
-                    if(item.year%4==0){
+                    if(item.year%4==0&&
+                        item.year%100!=0){
                         if(end==0){end=29}
                         item.width=(end-day)*vm.cardSize;
                         item.length=end-day;
@@ -351,11 +401,22 @@
                 let arr3=vm.changeDay(5);
                 let arr4=vm.changeDay(7);
                 let arr5=vm.changeDay(10);
+                vm.twoDay=arr1;
+                vm.threeDay=arr2;
+                vm.fiveDay=arr3;
+                vm.sevenDay=arr4;
+                vm.tenDay=arr5;
                 vm.twoList=vm.ChangeMonth(arr1);
                 vm.threeList=vm.ChangeMonth(arr2);
                 vm.fiveList=vm.ChangeMonth(arr3);
                 vm.sevenList=vm.ChangeMonth(arr4);
                 vm.tenList=vm.ChangeMonth(arr5);
+
+                vm.twoYear=vm.changeYear(arr1);
+                vm.threeYear=vm.changeYear(arr2);
+                vm.fiveYear=vm.changeYear(arr3);
+                vm.sevenYear=vm.changeYear(arr4);
+                vm.tenYear=vm.changeYear(arr5);
                 console.log("这是上旬下旬中旬的结果");
                 console.log(arr5);
 
@@ -392,7 +453,7 @@
                 }else{
                     item.day='中旬'
                 }
-                return item
+                return item;
             },
             //改变月里面天的间隔
             ChangeMonth(arr1){
@@ -405,14 +466,33 @@
                             arr1[i].month==arr2[j].month
                         ){
                             obj.push(arr1[i].day);
-                            arr2[j].day=obj
+                            arr2[j].day=obj;
+                            arr2[j].length= arr2[j].day.length
                         }
                     }
 
                 }
                 return arr2
-
             },
+            //改变年的间隔
+            changeYear(arr1){
+                let vm=this;
+                let arr2=JSON.parse(JSON.stringify(vm.year));
+                for(let j=0;j<arr2.length;j++){
+                    let obj=[];
+                    for(let i=0;i<arr1.length;i++){
+                        if(arr1[i].year==arr2[j].year
+                        ){
+                            obj.push(arr1[i].day);
+                            arr2[j].day=obj;
+                            arr2[j].length= arr2[j].day.length
+                        }
+                    }
+
+                }
+                return arr2
+            },
+
             formatTime(time) {
                 return common.formateTimestamp(time, "YYYY-MM-DD");
             },
@@ -468,42 +548,5 @@
         }
 
     }
-    /*.time-container{*/
-        /*position: fixed;*/
-        /*left: 0;*/
-        /*color: #6b6b6b;*/
-        /*font-size: 12px;*/
-        /*.common-time{*/
-            /*display: flex;*/
-            /*flex-direction: row;*/
-            /*border: 1px solid #CECECE;*/
-            /*border-right: none;*/
-            /*.common-time-item{*/
-                /*.month{*/
-                    /*display: flex;*/
-                    /*align-items: center;*/
-                    /*justify-content: center;*/
-                    /*border-right: 1px solid #CECECE;*/
-                    /*border-bottom: 1px solid #CECECE;*/
-                    /*height: 19px;*/
-                /*}*/
-                /*.common-time-inner{*/
-                    /*display: flex;*/
-                    /*flex-direction: row;*/
-                    /*.day{*/
-                        /*display: flex;*/
-                        /*align-items: center;*/
-                        /*justify-content: center;*/
-                        /*height: 19px;*/
-                        /*border-right: 1px solid #CECECE;*/
-                    /*}*/
-
-                /*}*/
-            /*}*/
-
-            /*//  height: 38px;*/
-        /*}*/
-
-    /*}*/
 
 </style>
