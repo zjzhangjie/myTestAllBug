@@ -3,26 +3,39 @@
 *  props:{
 *    left:左右拖动的距离
 *    cardSize:放大缩小的比例
-timer:缩放的比例
-isReduce:是否缩小
+     zoom:0：只显示年。1：只显示年月。2：只显示年月周。3：只显示月周星期 4：只显示月日
 *  }
 **/
 <template>
     <div>
         <div class="time-container-row" :style="style" id="time">
-            <div class="common-time">
-            <div class="year common-time-inner" v-for="item in year" v-bind:style="{width:(item.length*cardSize)+'px'}">
-            {{item.year}}年
+            <div class="common-time" v-if="isYear">
+                <div class="year common-time-inner" v-for="item in year" v-bind:style="{width:(item.length*cardSize)+'px'}">
+                    {{item.year}}年
+                </div>
             </div>
-            </div>
-            <div class="common-time">
+            <!--月-->
+            <div class="common-time" v-if="isMonth">
                 <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
                     {{item.year}}年{{item.month}}月
                 </div>
             </div>
-            <div class="common-time">
+            <!--日-->
+            <div class="common-time" v-if="isDay">
                 <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
                     {{item.day}}
+                </div>
+            </div>
+            <!--周-->
+            <div class="common-time" v-if="isWeek">
+                <div class="year common-time-inner" v-for="item in sevenDay"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
+                    {{item.day}}
+                </div>
+            </div>
+            <!--星期-->
+            <div class="common-time" v-if="isWatt">
+                <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
+                    {{item.week}}
                 </div>
             </div>
         </div>
@@ -53,6 +66,10 @@ isReduce:是否缩小
                 default:false
 
             },
+            zoom:{
+                type:Number,
+                default:0
+            }
         },
         computed: {
             style() {
@@ -63,6 +80,32 @@ isReduce:是否缩小
             },
             cTimer(){
                 return this.timer
+            },
+            //zoom:0：只显示年。1：只显示年月。2：只显示年月周。3：只显示月周星期 4：只显示月日
+            isYear(){
+                let vm=this;
+                let item=vm.zoom;
+                return item== 0|| item==1|| item==2 ? true : false;
+            },
+            isMonth(){
+                let vm=this;
+                let item=vm.zoom;
+                return item!= 0 ? true : false;
+            },
+            isWeek(){
+                let vm=this;
+                let item=vm.zoom;
+                return item== 2 ||item== 3 ? true : false;
+            },
+            isWatt(){
+                let vm=this;
+                let item=vm.zoom;
+                return item== 3? true : false;
+            },
+            isDay(){
+                let vm=this;
+                let item=vm.zoom;
+                return item== 4 ? true : false;
             }
         },
         watch:{
@@ -96,30 +139,29 @@ isReduce:是否缩小
                 monthWidth:0,
                 dayWidth:50,
                 timeMap:{},
-
                 twoList:[],
                 threeList:[],
                 fiveList:[],
                 sevenList:[],
                 tenList:[],
-
                 twoDay:[],
                 threeDay:[],
                 fiveDay:[],
                 sevenDay:[],
                 tenDay:[],
-
                 twoYear:[],
                 threeYear:[],
                 fiveYear:[],
                 sevenYear:[],
                 tenYear:[],
+                dayWeek:[],//每天是周几
 
             }
         },
         mounted(){
             this.$nextTick(function() {
                 this.caleTime()
+
             },1000);
         },
         methods:{
@@ -219,8 +261,8 @@ isReduce:是否缩小
                 let vm=this;
                 // let start_time= vm.formatTime(vm.start_time);
                 // let end_time= vm.formatTime(vm.end_time);
-                let start_time='2019-1-20';
-                let end_time='2019-2-28';
+                let start_time='2018-1-31';
+                let end_time='2019-4-28';
                 var s1 = start_time.replace(/-/g, "/");
                 var s2 = end_time.replace(/-/g, "/");
                 let d1 = new Date(s1);
@@ -238,13 +280,13 @@ isReduce:是否缩小
                 let day2 = parseInt(array2[2]);
                 console.log(start_time);
                 console.log(end_time);
-                vm.caleYear(year1,year2);
-                vm.caleMonth(month1,month2);
-                vm.caleDay(day1,day2);
-                vm.caleWeek(year1,d1);
+                vm.caleYear(year1,year2);//计算年
+                vm.caleMonth(month1,month2);//计算月
+                vm.caleDay(day1,day2);//计算天
+                vm.caleWeek(year1,d1);//计算有多少周
                 vm.caleChange();
-                vm.caleWidth()
-
+                vm.caleWidth();
+                vm.judgeXun();
             },
             //计算宽度
             caleWidth(){
@@ -271,29 +313,40 @@ isReduce:是否缩小
                 let len= vm.year.length;
                 let obj={};
                 for(let i=0;i<vm.year.length;i++){
-                    if(i==0){
-                        for (let j=month1-1;j<12;j++) {
-                            obj={
-                                year:vm.year[i].year,
-                                month:j+1,
-                                width:0
-                            }
-                            vm.month.push(obj)
-                        }
-                    }else if(i==len-1){
-                        for (let j = 0; j < 12; j++) {
-                            let num =j+1;
-                            if (num <= month2) {
+                    if(vm.year.length!=1){
+                        if(i==0){
+                            for (let j=month1-1;j<12;j++) {
                                 obj={
                                     year:vm.year[i].year,
-                                    month:num,
+                                    month:j+1,
+                                    width:0
+                                };
+                                vm.month.push(obj)
+                            }
+                        }else if(i==len-1){
+                            for (let j = 0; j < 12; j++) {
+                                let num =j+1;
+                                if (num <= month2) {
+                                    obj={
+                                        year:vm.year[i].year,
+                                        month:num,
+                                        width:0
+                                    }
+                                    vm.month.push(obj)
+                                }
+                            }
+                        }else{
+                            for (let j = 0; j < 12; j++) {
+                                obj={
+                                    year:vm.year[i].year,
+                                    month:j + 1,
                                     width:0
                                 }
                                 vm.month.push(obj)
                             }
                         }
                     }else{
-                        for (let j = 0; j < 12; j++) {
+                        for (let j = month1-1; j < month2; j++) {
                             obj={
                                 year:vm.year[i].year,
                                 month:j + 1,
@@ -302,6 +355,7 @@ isReduce:是否缩小
                             vm.month.push(obj)
                         }
                     }
+
 
                 }
             },
@@ -318,12 +372,14 @@ isReduce:是否缩小
                         vm.resetDay(obj,item,0)
                     }
                 }
+                vm.setWeek();
                 vm.year=vm.changeYear(vm.day);//确定年的长度
                 vm.originMonth=JSON.parse(JSON.stringify(vm.month));
                 vm.originDay=JSON.parse(JSON.stringify(vm.day));
                 vm.originYear=JSON.parse(JSON.stringify(vm.year));
                 console.log(vm.day);
                 console.log(vm.month);
+                console.log(vm.year)
             },
             resetDay(obj,item,day,end=0){
                 let vm=this;
@@ -375,10 +431,22 @@ isReduce:是否缩小
                     }
                 }
             },
+            setWeek(){
+                let vm=this;
+                var weekDay = ["天", "一", "二", "三", "四", "五", "六"];
+                let day=JSON.parse(JSON.stringify(vm.day));
+                for(let i=0;i<day.length;i++){
+                    let item=day[i].year+'/'+day[i].month+'/'+day[i].day;
+                    var myDate = new Date(Date.parse(item));
+                    day[i].week=weekDay[myDate.getDay()]
+                }
+                vm.day=day
+            },
             //如果是一位则补零
             PrefixInteger(num, n) {
                 return (Array(n).join(0) + num).slice(-n);
             },
+            //计算是第几周
             caleWeek(year,data2){
                 let vm=this;
                 let date1 = new Date(year, 0, 1);
@@ -387,12 +455,10 @@ isReduce:是否缩小
                 let week=0;
                 if(days%7==0){
                     week=days/7
-
                 }else{
                     week=parseInt(days/7)
                 }
                 vm.week=week;
-                console.log("第几周"+vm.week)
             },
             caleChange(){
                 let vm=this;
@@ -400,11 +466,12 @@ isReduce:是否缩小
                 let arr2=vm.changeDay(3);
                 let arr3=vm.changeDay(5);
                 let arr4=vm.changeDay(7);
-                let arr5=vm.changeDay(10);
+                let arr5=vm.judgeXun();
                 vm.twoDay=arr1;
                 vm.threeDay=arr2;
                 vm.fiveDay=arr3;
                 vm.sevenDay=arr4;
+                console.log(vm.sevenDay);
                 vm.tenDay=arr5;
                 vm.twoList=vm.ChangeMonth(arr1);
                 vm.threeList=vm.ChangeMonth(arr2);
@@ -419,7 +486,6 @@ isReduce:是否缩小
                 vm.tenYear=vm.changeYear(arr5);
                 console.log("这是上旬下旬中旬的结果");
                 console.log(arr5);
-
             },
             //改变天的间隔
             changeDay(n){
@@ -430,11 +496,14 @@ isReduce:是否缩小
                 for(let i=0;i<originDay.length;i++){
                     if(i%n==0){
                         if(n==7){
+                            if(i==0){
+                                let w=originDay[i].week;
+                                originDay[i].length=vm.judgeWeekLength(w)
+                            }else{
+                                originDay[i].length=7
+                            }
                             week=week+1;
                             originDay[i].day='第'+(week)+'周';
-                            newDay.push(originDay[i]);
-                        }else if(n==10){
-                            originDay[i]=vm.judgeXun(originDay[i]);
                             newDay.push(originDay[i]);
                         }else{
                             newDay.push(originDay[i]);
@@ -444,14 +513,68 @@ isReduce:是否缩小
                 originDay=newDay;
                 return originDay
             },
+            judgeWeekLength(value){
+                let len=0;
+                switch (value) {
+                    case '一':
+                        len=7;break;
+                    case '二':
+                        len=6;break;
+                    case '三':
+                        len=5;break;
+                    case '四':
+                        len=4;break;
+                    case '五':
+                        len=3;break;
+                    case '六':
+                        len=2;break;
+                    case '日':
+                        len=1;break;
+
+                }
+                return len
+
+            },
             //判断上旬、中旬、下旬
             judgeXun(item){
-                if(item.day<=10){
-                    item.day='上旬'
-                }else if(item.day>=21){
-                    item.day='下旬'
+                let vm=this;
+                let month=JSON.parse(JSON.stringify(vm.month));
+                let obj={};
+                let arr=[];
+                for(let i=0;i<month.length;i++){
+                    if(i==0){
+                        month[i].day=vm.reTurnXun(month[i].day[0]);
+                        for(let j=0;j<month[i].day.length;j++){
+                            obj={
+                                year:month[i].year,
+                                month:month[i].month,
+                                day:month[i].day[j]
+                            };
+                            arr.push(obj)
+                        }
+                    }else{
+                        month[i].day=vm.reTurnXun(0);
+                        for(let j=0;j<month[i].day.length;j++){
+                            obj={
+                                year:month[i].year,
+                                month:month[i].month,
+                                day:month[i].day[j]
+                            };
+                            arr.push(obj)
+                        }
+                    }
+                }
+
+                return arr
+            },
+            reTurnXun(day){
+                let item=[];
+                if(day<=10){
+                    item=['上旬','中旬','下旬']
+                }else if(day>=21){
+                    item=['下旬']
                 }else{
-                    item.day='中旬'
+                    item=['中旬','下旬']
                 }
                 return item;
             },
@@ -535,6 +658,9 @@ isReduce:是否缩小
                 justify-content: center;
                 align-items: center;
                 border-right: 1px solid #ebebeb;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
             }
             .common-time-inner:last-child{
                 border-right: none;
