@@ -9,31 +9,31 @@
 <template>
     <div>
         <div class="time-container-row" :style="style" id="time">
-            <div class="common-time" v-if="isYear">
+            <div class="common-time" v-if="isYear" :style="{height:hYear+'px'}">
                 <div class="year common-time-inner" v-for="item in year" v-bind:style="{width:(item.length*cardSize)+'px'}">
                     {{item.year}}年
                 </div>
             </div>
             <!--月-->
-            <div class="common-time" v-if="isMonth">
+            <div class="common-time" v-if="isMonth" :style="{height:hMonth+'px'}">
                 <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
                     {{item.year}}年{{item.month}}月
                 </div>
             </div>
             <!--日-->
-            <div class="common-time" v-if="isDay">
+            <div class="common-time" v-if="isDay" :style="{height:hDay+'px'}">
                 <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
-                    {{item.day}}
+                    {{item.day}}日
                 </div>
             </div>
             <!--周-->
-            <div class="common-time" v-if="isWeek">
+            <div class="common-time" v-if="isWeek" :style="{height:hWeek+'px'}">
                 <div class="year common-time-inner" v-for="item in sevenDay"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
                     {{item.day}}
                 </div>
             </div>
             <!--星期-->
-            <div class="common-time" v-if="isWatt">
+            <div class="common-time" v-if="isWatt" :style="{height:hWatt+'px'}">
                 <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
                     {{item.week}}
                 </div>
@@ -71,6 +71,45 @@
                 default:0
             }
         },
+        data(){
+            return{
+                start_time:1521043200000,//2018.3.15
+                end_time:1606456527000,//2019.11.27
+                year:[],
+                month:[],
+                week:0,//计算是第几周
+                day:[],
+                originMonth:[],
+                originDay:[],
+                originYear:[],
+
+                twoDay:[],
+                threeDay:[],
+                fiveDay:[],
+                sevenDay:[],
+                tenDay:[],
+
+                twoList:[],
+                threeList:[],
+                fiveList:[],
+                sevenList:[],
+                tenList:[],
+
+                twoYear:[],
+                threeYear:[],
+                fiveYear:[],
+                sevenYear:[],
+                tenYear:[],
+
+                hYear:20,
+                hMonth:20,
+                hWeek:20,
+                hDay:20,
+                hWatt:20,
+
+
+            }
+        },
         computed: {
             style() {
                 return{
@@ -85,6 +124,13 @@
             isYear(){
                 let vm=this;
                 let item=vm.zoom;
+                if(item==0){
+                    vm.hYear=60
+                }
+                if(item==1){
+                    vm.hYear=30
+                }
+                vm.hYear=20;
                 return item== 0|| item==1|| item==2 ? true : false;
             },
             isMonth(){
@@ -106,7 +152,7 @@
                 let vm=this;
                 let item=vm.zoom;
                 return item== 4 ? true : false;
-            }
+            },
         },
         watch:{
             cTimer(newVal,oldVal){
@@ -123,40 +169,6 @@
                 }
 
             },
-        },
-        data(){
-            return{
-                start_time:1521043200000,//2018.3.15
-                end_time:1606456527000,//2019.11.27
-                year:[],
-                month:[],
-                originMonth:[],
-                originDay:[],
-                originYear:[],
-                week:[],
-                day:[],
-                yearWidth:0,
-                monthWidth:0,
-                dayWidth:50,
-                timeMap:{},
-                twoList:[],
-                threeList:[],
-                fiveList:[],
-                sevenList:[],
-                tenList:[],
-                twoDay:[],
-                threeDay:[],
-                fiveDay:[],
-                sevenDay:[],
-                tenDay:[],
-                twoYear:[],
-                threeYear:[],
-                fiveYear:[],
-                sevenYear:[],
-                tenYear:[],
-                dayWeek:[],//每天是周几
-
-            }
         },
         mounted(){
             this.$nextTick(function() {
@@ -261,7 +273,7 @@
                 let vm=this;
                 // let start_time= vm.formatTime(vm.start_time);
                 // let end_time= vm.formatTime(vm.end_time);
-                let start_time='2018-1-31';
+                let start_time='2019-1-31';
                 let end_time='2019-4-28';
                 var s1 = start_time.replace(/-/g, "/");
                 var s2 = end_time.replace(/-/g, "/");
@@ -619,23 +631,6 @@
             formatTime(time) {
                 return common.formateTimestamp(time, "YYYY-MM-DD");
             },
-            //监听鼠标事件
-            handleScroll:debounce(function (e) {
-                // let vm=this;
-                // let direction = e.deltaY>0?'down':'up' ;//该语句可以用来判断滚轮是向上滑动还是向下
-                // if(direction=='down'){
-                //     if(vm.cardSize<20){return}
-                //     vm.cardSize=vm.cardSize-vm.scale;
-                //     vm.minScaleWidth();
-                //     vm.initTime()
-                // }else{
-                //     if(vm.cardSize>=70){return}
-                //     this.cardSize=this.cardSize+vm.scale;
-                //     vm.maxScaleWidth();
-                //     vm.initTime()
-                // }
-            },10),
-
         }
     }
 </script>
@@ -657,10 +652,20 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                border-right: 1px solid #ebebeb;
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: ellipsis;
+                position: relative;
+            }
+             .common-time-inner:after {
+                content: "";
+                width:1px;
+                height:100%;
+                background-color: #ebebeb;
+                position: absolute;
+                top: 0;
+                z-index: 1;
+                right: 0;
             }
             .common-time-inner:last-child{
                 border-right: none;
