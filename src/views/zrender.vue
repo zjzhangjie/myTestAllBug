@@ -1,22 +1,18 @@
 <template>
     <div class="zrender">
-        <div class="time-container"  id="time" ref="time">
-            <!--<div class="common-time">-->
-                <!--<div class="year common-time-inner" v-for="item in year"  v-bind:style="{width:item.width+'px'}" >-->
-                    <!--{{item.year}}年-->
-                <!--</div>-->
-            <!--</div>-->
-            <div class="common-time">
-                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:item.width+'px'}" >
-                  {{item.year}}年{{item.month}}月
-                </div>
-            </div>
-            <div class="common-time">
-                <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
-                    {{item.day}}
-                </div>
-            </div>
+        <div class="button">
+            <button @click="magnify(zoom)">放大</button>
+            <button @click="reduce(zoom)" >缩小</button>
         </div>
+
+        <calendar
+                :zoom="zoom"
+                :left="calendarLeft"
+                :timer="timer"
+                :isReduce="isReduce"
+                :cardSize="cardSize">
+
+        </calendar>
         <div class="container" style="width:1500px;height:500px;">
             <div   :style="style"
                    ref="myCanvas"
@@ -35,6 +31,7 @@
     import zrender from 'zrender';
     import debounce from "lodash.debounce";
     import  common from '../tools/common'
+    import calendar from '../components/calendar'
     export default {
         name: "zrender",
         data(){
@@ -137,17 +134,32 @@
                 dots:[],
                 zr:null,
                 zrg:null,
+                time:{
+                    start_time:1521043200000,//2018.3.15
+                    end_time:1606456527000,//2019.11.27
+                },
                 start_time:1521043200000,//2018.3.15
                 end_time:1606456527000,//2019.11.27
                 year:[],
                 month:[],
+                originMonth:[],
+                originDay:[],
                 week:[],
                 day:[],
                 yearWidth:0,
                 monthWidth:0,
                 dayWidth:50,
-                cardSize:50,//事件点的宽度
-                timeMap:{}
+                timeMap:{},
+                timer:0,
+                twoList:[],
+                threeList:[],
+                fiveList:[],
+                sevenList:[],
+                tenList:[],
+                calendarLeft:'0px',
+                isReduce:false,
+                zoom:3,
+                cardSize:50
             }
         },
         computed: {
@@ -156,199 +168,117 @@
                     top: '100px',
                     left: '0px'
                 };
-            }
+            },
+        },
+        watch:{
+            zoom(newVal,oldVal){
+                let vm=this
+                if(newVal==0){
+                    vm.cardSize=1;
+                    return
+                }
+                if(newVal==1){
+                    vm.cardSize=5;
+                    return
+                }
+                if(newVal==2){
+                    vm.cardSize=20;
+                    return
+                }
+                if(newVal==3){
+                    vm.cardSize=40;
+                    return
+                }
+                if(newVal==4){
+                    vm.cardSize=50;
+                    return
+                }
+
+
+            },
         },
         mounted(){
-            this.initTime();
             this.$nextTick(function() {
-                this.caleTime()
+                this.initTime()
             },1000);
 
         },
         methods:{
-            //表头的日历
-            //格式化时间
-            caleTime(){
-              let vm=this;
-              // let start_time= vm.formatTime(vm.start_time);
-              // let end_time= vm.formatTime(vm.end_time);
-                let start_time='2018-12-15';
-                let end_time='2019-2-28';
-              var s1 = start_time.replace(/-/g, "/");
-              var s2 = end_time.replace(/-/g, "/");
-              let d1 = new Date(s1);
-              let d2 = new Date(s2);
-              var time= d2.getTime() - d1.getTime();
-              var days = parseInt(time / (1000 * 60 * 60 * 24));
-              console.log(days);
-              let array1 = start_time.split('-');
-              let array2 = end_time.split('-');
-              let month1 = parseInt(array1[1]);
-              let month2 = parseInt(array2[1]);
-              let year1 = parseInt(array1[0]);
-              let year2 = parseInt(array2[0]);
-              let day1 = parseInt(array1[2]);
-              let day2 = parseInt(array2[2]);
-              console.log(start_time);
-              console.log(end_time);
-              vm.caleYear(year1,year2);
-              vm.caleMonth(month1,month2);
-              vm.caleDay(day1,day2);
-              vm.caleWeek();
-              vm.caleWidth();
+            magnify(val){
+                let vm=this;
+                if(val<4){
+                    val=val+1;
+                    vm.zoom=val
+                }
 
             },
-            caleYear(year1,year2){
+            reduce(val){
                 let vm=this;
-                let len=year2-year1+1;
-                let obj={};
-                for(let i=0;i<len;i++){
-                    if(year1<=year2){
-                        obj={
-                            year:year1,
-                            width:0,
-                        };
-                        vm.year.push(obj);
-                        year1=year1+1;
-                    }
+                if(val>0){
+                    val=val-1;
+                    vm.zoom=val
                 }
             },
-            caleMonth(month1,month2){
-                let vm=this;
-                let len= vm.year.length;
-                let obj={};
-                for(let i=0;i<vm.year.length;i++){
-                    if(i==0){
-                        for (let j=month1-1;j<12;j++) {
-                            obj={
-                                year:vm.year[i].year,
-                                month:j+1,
-                                width:0
-                            }
-                            vm.month.push(obj)
-                        }
-                    }else if(i==len-1){
-                        for (let j = 0; j < 12; j++) {
-                                let num =j+1;
-                                if (num <= month2) {
-                                    obj={
-                                        year:vm.year[i].year,
-                                        month:num,
-                                        width:0
-                                    }
-                                    vm.month.push(obj)
-                                }
-                            }
-                    }else{
-                        for (let j = 0; j < 12; j++) {
-                                obj={
-                                    year:vm.year[i].year,
-                                    month:j + 1,
-                                    width:0
-                                }
-                                vm.month.push(obj)
-                            }
-                        }
-
-                }
-            },
-            caleDay(day1,day2){
-                let vm=this;
-                let obj={};
-                for(let i=0;i<vm.month.length;i++){
-                    let item=vm.month[i];
-
-                    if(i==0){
-                        vm.resetDay(obj,item,day1-1)
-                    }else if(i==vm.month.length-1){
-                        vm.resetDay(obj,item,0,day2)
-                    }else{
-                        vm.resetDay(obj,item,0)
-                    }
-                }
-              console.log(vm.day);
-              console.log(vm.month)
-            },
-            resetDay(obj,item,day,end=0){
-                let vm=this;
-                if(item.month==1||item.month==3||
-                    item.month==5||item.month==7||
-                    item.month==8||item.month==10||
-                    item.month==12){
-                    if(end==0){end=31}
-                    item.width=(end-day)*vm.cardSize;
-                    item.length=end-day;
-                    item.day=[];
-                    for(let j=day;j<end;j++){
-                       item.day.push(j+1);
-                        obj={year:item.year, month: item.month,day:j+1};vm.day.push(obj)
-                    }
-                }else if(item.month==2){
-                    if(item.year%4==0){
-                        if(end==0){end=29}
-                        item.width=(end-day)*vm.cardSize;
-                        item.length=end-day;
-                        item.day=[];
-                        for(let j=day;j<end;j++){
-                           item.day.push(j+1);
-                            obj={year:item.year, month: item.month,day:j+1};vm.day.push(obj)
-                        }
-                    }else{
-                        if(end==0){end=28}
-                        item.width=(end-day)*vm.cardSize;
-                        item.length=end-day;
-                        item.day=[];
-                        for(let j=day;j<end;j++){
-                        item.day.push(j+1);
-                            obj={year:item.year, month: item.month,day:j+1};vm.day.push(obj)
-                        }
-                    }
-                }else{
-                    if(end==0){end=30}
-                    item.width=(end-day)*vm.cardSize;
-                    item.length=end-day;
-                    item.day=[];
-                    for(let j=day;j<30;j++){
-                        item.day.push(j+1);
-                        obj={day:j+1};vm.day.push(obj)
-                    }
-                }
-            },
-            caleWeek(){},
             //计算宽度
-            caleWidth(){
+            minScaleWidth(){
                 let vm=this;
-                $("#time").width(vm.day.length*vm.cardSize);
-                let width=0;
-                //计算年的宽度
-                // for(let i=0;i<vm.month.length;i++){
-                //    for(let j=0;j<vm.year.length;j++){
-                //        if(vm.year[j].year==vm.month[i].year){
-                //          vm.year[i].width=vm.year[i].width+vm.month[i].width;
-                //        }
-                //   }
-                //  }
                if(vm.cardSize==20){
-                   vm.twoDay();
+                   if(vm.timer==0){
+                       vm.setChange(2,40);
+                       return
+                   }
+                   if(vm.timer==2){
+                       vm.setChange(3,40);
+                       return
+                   }
+                   if(vm.timer==3){
+                       vm.setChange(5,40);
+                       return
+                   }
+                   if(vm.timer==5){
+                       vm.setChange(7,40);
+                       return
+                   }
+                   if(vm.timer==7){
+                       vm.setChange(10,40);
+                       return
+                   }
                 }
-                //计算月的宽度
-                // for(let i=0;i<vm.month.length;i++){
-                //     vm.month[i].width=vm.month[i].length*vm.cardSize
-                // }
                 console.log(vm.cardSize);
-                console.log(vm.year);
             },
-            //时隔两天
-            twoDay(){
+            maxScaleWidth(){
                 let vm=this;
-                for(let i=0;i<vm.day.length;i++){
-                    let item=vm.day[i].day;
-                    if(i!==0&&item%2==0){
-                        vm.day.splice(i,1)
+                if(vm.cardSize==70){
+                    if(vm.timer==10){
+                        vm.setChange(7,40);
+                        return
                     }
-                }
-                vm.cardSize=40;
-                console.log(vm.cardSize)
+                    if(vm.timer==7){
+                        vm.setChange(5,40);
+                        return
+                    }
+                    if(vm.timer==5){
+                        vm.setChange(3,40);
+                        return
+                    }
+                    if(vm.timer==3){
+                        vm.setChange(2,40);
+                        return
+                    }
+                    if(vm.timer==2){
+                        vm.setChange(0,40);
+                        return
+                    }
+                   }
+                console.log(vm.cardSize);
+            },
+            //缩放后，设置变换
+            setChange(num,size){
+                let vm=this;
+                vm.timer=num;
+                vm.$nextTick(function() {
+                    vm.cardSize=size;
+                });
             },
             formatTime(time) {
                 return common.formateTimestamp(time, "YYYY-MM-DD");
@@ -360,13 +290,15 @@
                 if(direction=='down'){
                     if(vm.cardSize<20){return}
                     vm.cardSize=vm.cardSize-vm.scale;
-                    vm.caleWidth();
+                    vm.isReduce=true;
+                    vm.minScaleWidth();
                     vm.initTime()
                 }else{
                     if(vm.cardSize>=70){return}
                     this.cardSize=this.cardSize+vm.scale;
-                    vm.caleWidth();
-                    vm.initTime()
+                    vm.maxScaleWidth();
+                    vm.initTime();
+                    vm.isReduce=false;
                 }
             },10),
             //监听鼠标拖动事件
@@ -394,12 +326,13 @@
                 // 代码关键处
                 vm.$refs.myCanvas.style.left = nl + 'px';
                 vm.$refs.myCanvas.style.top = nt + 'px';
-                vm.$refs.time.style.left = nl + 'px';
+                vm.calendarLeft= nl + 'px';
             },
             moveEnd(e){
                 window.removeEventListener('mousemove', this.mousemove);
                 window.removeEventListener('mouseup', this.moveEnd);
             },
+
             //初始化画布
             initCanvas(){
                 let vm=this;
@@ -787,12 +720,19 @@
                 }
                 return result
             }
+        },
+        components:{
+            calendar
         }
     }
 </script>
 
 <style scoped lang="less">
     .zrender{
+        .button{
+            position: fixed;
+            top: 80px;
+        }
         .container{
             position: fixed;
             left:0;
@@ -803,36 +743,6 @@
             position: fixed;
             z-index: 100;
             margin-top: 70px;
-        }
-        .time-container{
-            position: fixed;
-            left: 0;
-           // height: 60px;
-            color: #6b6b6b;
-            font-size: 12px;
-            border: 1px solid #CECECE;
-            .common-time{
-                display: flex;
-                flex-direction: row;
-                height: 19px;
-                border-bottom: 1px solid #CECECE;
-                .common-time-inner{
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    border-right: 1px solid #ebebeb;
-                }
-                .common-time-inner:last-child{
-                   border-right: none;
-                }
-                &:first-child{
-
-                }
-                &:last-child{
-                    border-bottom: none;
-                }
-            }
-
         }
     }
     /*.box {*/
