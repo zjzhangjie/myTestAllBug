@@ -9,14 +9,14 @@ isReduce:是否缩小
 **/
 <template>
     <div>
-        <div class="time-container-row" :style="style">
+        <div class="time-container-row" :style="style" id="time">
             <!--<div class="common-time">-->
             <!--<div class="year common-time-inner" v-for="item in year"  v-bind:style="{width:item.width+'px'}" >-->
             <!--{{item.year}}年-->
             <!--</div>-->
             <!--</div>-->
-            <div class="common-time">
-                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.width)+'px'}" >
+            <div class="common-time" >
+                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
                     {{item.year}}年{{item.month}}月
                 </div>
             </div>
@@ -85,15 +85,16 @@ isReduce:是否缩小
                     return
                 }
                 vm.maxScaleWidth(newVal)
-            }
+            },
+            cardSize(newVal,oldVal){
+                if(newVal!==oldVal){
+                    this.caleWidth()
+                }
+
+            },
         },
         data(){
             return{
-                scale:2,//放大缩小的速度
-                X: 0,
-                Y: 0,
-                L: 0,
-                T: 0,
                 start_time:1521043200000,//2018.3.15
                 end_time:1606456527000,//2019.11.27
                 year:[],
@@ -178,7 +179,7 @@ isReduce:是否缩小
                 // let start_time= vm.formatTime(vm.start_time);
                 // let end_time= vm.formatTime(vm.end_time);
                 let start_time='2018-1-15';
-                let end_time='2019-2-28';
+                let end_time='2018-2-28';
                 var s1 = start_time.replace(/-/g, "/");
                 var s2 = end_time.replace(/-/g, "/");
                 let d1 = new Date(s1);
@@ -201,7 +202,13 @@ isReduce:是否缩小
                 vm.caleDay(day1,day2);
                 vm.caleWeek(year1,d1);
                 vm.caleChange();
+                vm.caleWidth()
 
+            },
+            //计算宽度
+            caleWidth(){
+                let vm=this;
+                $("#time").width(vm.day.length*vm.cardSize);
             },
             caleYear(year1,year2){
                 let vm=this;
@@ -262,7 +269,6 @@ isReduce:是否缩小
                 let obj={};
                 for(let i=0;i<vm.month.length;i++){
                     let item=vm.month[i];
-
                     if(i==0){
                         vm.resetDay(obj,item,day1-1)
                     }else if(i==vm.month.length-1){
