@@ -9,7 +9,7 @@
 <template>
     <div>
         <div class="time-container-row" :style="style" id="time">
-            <div class="common-time" v-if="isYear" :style="{height:hYear+'px'}">
+            <div class="common-time" v-if="isYear" v-bind:style="{height:hYear+'px'}">
                 <div class="year common-time-inner" v-for="item in year" v-bind:style="{width:(item.length*cardSize)+'px'}">
                     {{item.year}}年
                 </div>
@@ -21,7 +21,7 @@
                 </div>
             </div>
             <!--日-->
-            <div class="common-time" v-if="isDay" :style="{height:hDay+'px'}">
+            <div class="common-time" v-if="isDay" v-bind:style="{height:hDay+'px'}">
                 <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
                     {{item.day}}日
                 </div>
@@ -51,25 +51,26 @@
         props:{
             cardSize:{
                 type:Number,
-                default:50
+                default:50,
             },
             left:{
                 type:String,
                 default:'0px'
             },
-            timer:{
-                type:Number,
-                default:0
-            },
-            isReduce:{
-                type:Boolean,
-                default:false
-
-            },
             zoom:{
                 type:Number,
                 default:0
+            },
+            time:{
+                type:Object,
+                default: function() {
+                    return {
+                        start_time:new Date().getTime(),
+                        end_time:''
+                    };
+                }
             }
+
         },
         data(){
             return{
@@ -111,6 +112,11 @@
             }
         },
         computed: {
+            zoomT(){
+                console.log("变化成什么样子")
+                console.log(this.zoom);
+                return this.zoom
+            },
             style() {
                 return{
                     top: '100px',
@@ -123,34 +129,33 @@
             //zoom:0：只显示年。1：只显示年月。2：只显示年月周。3：只显示月周星期 4：只显示月日
             isYear(){
                 let vm=this;
-                let item=vm.zoom;
+                let item=vm.zoomT;
                 if(item==0){
                     vm.hYear=60
                 }
                 if(item==1){
                     vm.hYear=30
                 }
-                vm.hYear=20;
                 return item== 0|| item==1|| item==2 ? true : false;
             },
             isMonth(){
                 let vm=this;
-                let item=vm.zoom;
+                let item=vm.zoomT;
                 return item!= 0 ? true : false;
             },
             isWeek(){
                 let vm=this;
-                let item=vm.zoom;
+                let item=vm.zoomT;
                 return item== 2 ||item== 3 ? true : false;
             },
             isWatt(){
                 let vm=this;
-                let item=vm.zoom;
+                let item=vm.zoomT;
                 return item== 3? true : false;
             },
             isDay(){
                 let vm=this;
-                let item=vm.zoom;
+                let item=vm.zoomT;
                 return item== 4 ? true : false;
             },
         },
@@ -158,10 +163,10 @@
             cTimer(newVal,oldVal){
                 let vm=this;
                 if(vm.isReduce){
-                    vm.minScaleWidth(newVal);
+             //       vm.minScaleWidth(newVal);
                     return
                 }
-                vm.maxScaleWidth(newVal)
+             //   vm.maxScaleWidth(newVal)
             },
             cardSize(newVal,oldVal){
                 if(newVal!==oldVal){
@@ -271,10 +276,10 @@
             //表头的日历
             caleTime(){
                 let vm=this;
-                // let start_time= vm.formatTime(vm.start_time);
-                // let end_time= vm.formatTime(vm.end_time);
-                let start_time='2019-1-31';
-                let end_time='2019-4-28';
+                let start_time= vm.formatTime(vm.time.start_time);
+                let end_time= vm.formatTime(vm.time.end_time);
+                // let start_time='2019-1-31';
+                // let end_time='2019-4-28';
                 var s1 = start_time.replace(/-/g, "/");
                 var s2 = end_time.replace(/-/g, "/");
                 let d1 = new Date(s1);
@@ -384,14 +389,11 @@
                         vm.resetDay(obj,item,0)
                     }
                 }
-                vm.setWeek();
+                vm.setWeek();//计算星期
                 vm.year=vm.changeYear(vm.day);//确定年的长度
                 vm.originMonth=JSON.parse(JSON.stringify(vm.month));
                 vm.originDay=JSON.parse(JSON.stringify(vm.day));
                 vm.originYear=JSON.parse(JSON.stringify(vm.year));
-                console.log(vm.day);
-                console.log(vm.month);
-                console.log(vm.year)
             },
             resetDay(obj,item,day,end=0){
                 let vm=this;
@@ -668,10 +670,9 @@
                 right: 0;
             }
             .common-time-inner:last-child{
-                border-right: none;
-            }
-            &:first-child{
-
+               &::after{
+                 display: none;
+               }
             }
             &:last-child{
                 border-bottom: none;
