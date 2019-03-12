@@ -45,7 +45,7 @@
 
 <script>
     import debounce from "lodash.debounce";
-    import  common from '../tools/common'
+    import  common from '../../tools/common'
     export default {
         name: "calendar",
         props:{
@@ -242,13 +242,11 @@
                         vm.month= vm.originMonth;
                         vm.day=vm.originDay;
                         vm.year=vm.originYear;
-                        console.log(vm.month);
                         break;
                     case 2:
                         vm.month= vm.twoList;
                         vm.day=vm.twoDay;
                         vm.year=vm.twoYear;
-                        console.log(vm.month);
                         break;
                     case 3:
                         vm.month= vm.threeList;
@@ -485,7 +483,6 @@
                 vm.threeDay=arr2;
                 vm.fiveDay=arr3;
                 vm.sevenDay=arr4;
-                console.log(vm.sevenDay);
                 vm.tenDay=arr5;
                 vm.twoList=vm.ChangeMonth(arr1);
                 vm.threeList=vm.ChangeMonth(arr2);
@@ -498,8 +495,6 @@
                 vm.fiveYear=vm.changeYear(arr3);
                 vm.sevenYear=vm.changeYear(arr4);
                 vm.tenYear=vm.changeYear(arr5);
-                console.log("这是上旬下旬中旬的结果");
-                console.log(arr5);
             },
             //改变天的间隔
             changeDay(n){
@@ -639,9 +634,6 @@
 
 <style scoped lang="less">
     .time-container-row{
-        position: fixed;
-        left: 0;
-        // height: 60px;
         color: #6b6b6b;
         font-size: 12px;
         border: 1px solid #CECECE;
