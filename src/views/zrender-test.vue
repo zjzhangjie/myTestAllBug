@@ -31,7 +31,7 @@
     import zrender from 'zrender';
     import debounce from "lodash.debounce";
     import  common from '../tools/common'
-    import calendar from '../components/calendar'
+    import calendar from '../components/pert/calendar'
     export default {
         name: "zrender",
         data(){
