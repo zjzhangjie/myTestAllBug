@@ -10,7 +10,9 @@
       <router-link to="/mResources">按照多个资源分组</router-link>|
       <router-link to="/resourcesOver">资源负载图</router-link>|
       <router-link to="/networkPlanning">网络图</router-link>|
-      <router-link to="/zrender">zrender</router-link>
+      <router-link to="/zrender">zrender</router-link>|
+      <router-link to="/zuoqin">左琴宝宝的</router-link>|
+      <router-link to="/initTime">表头的日历</router-link>
     </div>
     <router-view/>
   </div>
