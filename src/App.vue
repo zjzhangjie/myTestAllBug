@@ -12,7 +12,8 @@
       <router-link to="/networkPlanning">网络图</router-link>|
       <router-link to="/zrender">zrender</router-link>|
       <router-link to="/zuoqin">左琴宝宝的</router-link>|
-      <router-link to="/initTime">表头的日历</router-link>
+      <router-link to="/initTime">表头的日历</router-link><br>
+      <router-link to="/gaodeMap">高德地图</router-link>
     </div>
     <router-view/>
   </div>
