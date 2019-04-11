@@ -49,8 +49,17 @@ export default new Router({
       },{
           path: '/zrender',
           name: 'v',
-          component: () => import('./views/zrender.vue')
+          component: () => import('./views/pert.vue')
+      },{
+          path: '/zuoqin',
+          name: 'v',
+          component: () => import('./components/pert/tree.vue')
+      },{
+          path: '/initTime',
+          name: 'initTime',
+          component: () => import('./views/initTime.vue')
       }
+
 
   ]
 })
