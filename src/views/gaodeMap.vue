@@ -1,6 +1,6 @@
 <template>
     <div class="map-container">
-        <!--<div id="container" class="container"></div>-->
+        <div id="container" class="container"></div>
         <vue-draggable-resizable :grid=[20,20] :parent="true"   class-name="first-move">
             <p>Grid 20x20 starting from the top-left corner</p>
         </vue-draggable-resizable>
@@ -23,7 +23,7 @@
 
         },
         mounted(){
-           // this.initMap()
+           this.initMap()
 
         },
         methods:{
@@ -53,6 +53,9 @@
             height: 1000px;
             width: 800px;
 
+        }
+        .first-move{
+            background-color: red;
         }
         .parent{
             position: relative;
