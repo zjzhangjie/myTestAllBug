@@ -58,6 +58,10 @@ export default new Router({
           path: '/initTime',
           name: 'initTime',
           component: () => import('./views/initTime.vue')
+      },{
+          path: '/gaodeMap',
+          name: 'gaodeMap',
+          component: () => import('./views/gaodeMap.vue')
       }
 
 
