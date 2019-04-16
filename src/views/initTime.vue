@@ -3,41 +3,57 @@
 *  props:{
 *    left:左右拖动的距离
 *    cardSize:放大缩小的比例
-timer:缩放的比例
-isReduce:是否缩小
+zoom:0：只显示年。
+1：只显示年月。
+2：只显示年月周。
+3：日的间隔为5,
+4：日的间隔为3，
+5：日的间隔为2，
+6：只显示月周星期
+7：只显示月日
+time:{
+start_time://计划最早时间
+end_time:''//计划最迟时间
+}
+PlusDay:{//日立的开始和结束需要加上几天
+start:0,
+end：0
+}
 *  }
 **/
 <template>
     <div>
         <div class="time-container-row" :style="style" id="time">
-            <!--<div class="common-time">-->
-            <!--<div class="year common-time-inner" v-for="item in year"  v-bind:style="{width:item.width+'px'}" >-->
-            <!--{{item.year}}年-->
-            <!--</div>-->
-            <!--</div>-->
-            <div class="common-time" >
-                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
-                    {{item.year}}年{{item.month}}月
+            <div class="common-time" v-if="isYear" v-bind:style="{height:hYear+'px'}">
+                <div class="year common-time-inner" v-for="item in year" v-bind:style="{width:(item.length*cardSize)+'px'}">
+                    {{item.year}}年
                 </div>
             </div>
-            <div class="common-time">
+            <!--月-->
+            <div class="common-time" v-if="isMonth" :style="{height:hMonth+'px'}">
+                <div class="year common-time-inner" v-for="item in month"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
+                    {{zoom==0?'':item.year+'年'}}{{item.month}}月
+                </div>
+            </div>
+            <!--日-->
+            <div class="common-time" v-if="isDay" v-bind:style="{height:hDay+'px'}">
                 <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
+                    {{item.day}}日
+                </div>
+            </div>
+            <!--周-->
+            <div class="common-time" v-if="isWeek" :style="{height:hWeek+'px'}">
+                <div class="year common-time-inner" v-for="item in sevenDay"  v-bind:style="{width:(item.length*cardSize)+'px'}" >
                     {{item.day}}
                 </div>
             </div>
+            <!--星期-->
+            <div class="common-time" v-if="isWatt" :style="{height:hWatt+'px'}">
+                <div class="year common-time-inner" v-for="item in day"  v-bind:style="{width:cardSize+'px'}" >
+                    {{item.week}}
+                </div>
+            </div>
         </div>
-        <!--<div  :style="style" class="time-container"  @mousewheel="handleScroll($event)"  id="time" ref="time">-->
-        <!--<div class="common-time">-->
-        <!--<div  v-for="item in month" class="common-time-item">-->
-        <!--<div class="month">{{item.year}}年{{item.month}}月</div>-->
-        <!--<div class="common-time-inner">-->
-        <!--<div class="day" v-for="i in item.day"  v-bind:style="{width:cardSize+'px'}" >-->
-        <!--{{i}}-->
-        <!--</div>-->
-        <!--</div>-->
-        <!--</div>-->
-        <!--</div>-->
-        <!--</div>-->
     </div>
 
 </template>
@@ -48,143 +64,242 @@ isReduce:是否缩小
     export default {
         name: "calendar",
         props:{
+            plusDay:{
+                type:Object,
+                default:function(){
+                    return{
+                        start:4,
+                        end:7
+                    }
+                },
+            },
             cardSize:{
                 type:Number,
-                default:50
+                default:50,
             },
-            left:{
-                type:String,
-                default:'0px'
-            },
-            timer:{
+            moveX:{
                 type:Number,
                 default:0
             },
-            isReduce:{
-                type:Boolean,
-                default:false
-
+            zoom:{
+                type:Number,
+                default:6
             },
-        },
-        computed: {
-            style() {
-                return{
-                    top: '100px',
-                    left: this.left
-                };
-            },
-            cTimer(){
-                return this.timer
+            time:{
+                type:Object,
+                default: function() {
+                    return {
+                        start_time:new Date().getTime(),
+                        end_time:new Date().getTime(),
+                    };
+                }
             }
-        },
-        watch:{
-            cTimer(newVal,oldVal){
-                let vm=this;
-                if(vm.isReduce){
-                    vm.minScaleWidth(newVal);
-                    return
-                }
-                vm.maxScaleWidth(newVal)
-            },
-            cardSize(newVal,oldVal){
-                if(newVal!==oldVal){
-                    this.caleWidth()
-                }
 
-            },
         },
         data(){
             return{
-                start_time:1521043200000,//2018.3.15
-                end_time:1606456527000,//2019.11.27
                 year:[],
                 month:[],
+                week:0,//计算是第几周
+                day:[],
                 originMonth:[],
                 originDay:[],
-                week:[],
-                day:[],
-                yearWidth:0,
-                monthWidth:0,
-                dayWidth:50,
-                timeMap:{},
-                twoList:[],
+                originYear:[],
+
+                twoDay:[],//天的间隔
+                threeDay:[],
+                fiveDay:[],
+                sevenDay:[],
+                tenDay:[],
+
+                twoList:[],//月的间隔
                 threeList:[],
                 fiveList:[],
                 sevenList:[],
                 tenList:[],
+
+                twoYear:[],//年的间隔
+                threeYear:[],
+                fiveYear:[],
+                sevenYear:[],
+                tenYear:[],
+
+                hYear:20,
+                hMonth:20,
+                hWeek:20,
+                hDay:20,
+                hWatt:20,
+
+
             }
+        },
+        computed: {
+            style() {
+                return{
+                    left: this.moveX+'px'
+                };
+            },
+            zoomT(){
+                this.zoomChange(this.zoom);
+                return this.zoom
+            },
+            /*
+              zoom:
+          -1：只显示年。
+          0:只显示上旬下旬中旬
+          1：只显示年月。
+          2：只显示年月周。
+          3：日的间隔为5,
+          4：日的间隔为3，
+          5：日的间隔为2，
+          6：只显示月周星期
+          7：只显示月日*/
+            isYear(){
+                let vm=this;
+                let item=vm.zoomT;
+                return item== -1 ||item== 0? true : false;
+            },
+            isMonth(){//只显示年月
+                let vm=this;
+                let item=vm.zoomT;
+                return item!= -1 ? true : false;
+            },
+            isWeek(){//只显示月周
+                let vm=this;
+                let item=vm.zoomT;
+                return item== 2 ||item== 6 ? true : false;
+            },
+            isWatt(){//只显示月周星期
+                let vm=this;
+                let item=vm.zoomT;
+                return item== 6? true : false;
+            },
+            isDay(){//只显示月日
+                let vm=this;
+                let item=vm.zoomT;
+                return item== 1||item== 7||item== 3||item== 4||item== 5? true : false;
+            },
+        },
+        watch:{
+            zoomT(newVal,oldVal){
+                let vm=this;
+                vm.zoomChange(newVal)
+                console.log("cardsize的距离")
+                console.log(vm.cardSize)
+
+            },
         },
         mounted(){
             this.$nextTick(function() {
                 this.caleTime()
+
             },1000);
         },
         methods:{
-            //计算宽度
-            minScaleWidth(newVal){
+            zoomChange(val){
                 let vm=this;
-                if(vm.cardSize==20){
-                    if(newVal==2){
-                        vm.month= vm.twoList;
-                        return
-                    }
-                    if(newVal==3){
-                        vm.month= vm.threeList;
-                        return
-                    }
-                    if(newVal==5){
-                        vm.month= vm.fiveList;
-                        return
-                    }
-                    if(newVal==7){
-                        vm.month= vm.sevenList;
-                        return
-                    }
-                    if(newVal==10){
-                        vm.month= vm.tenList;
-                        return
-                    }
+                switch (val) {
+                    case -1://为年
+                        vm.hYear=60;
+                        vm.switchChange(-1);
+                        break;
+                    case 0://为月
+                        vm.hMonth=29;
+                        vm.hYear=29;
+                        vm.switchChange(0);
+                        break;
+                    case 1://时间间隔为10
+                        vm.hMonth=29;
+                        vm.hDay=29;
+                        vm.switchChange(10);
+                        break;
+                    case 2://为星期
+                        vm.hMonth=29;
+                        vm.hWeek=29;
+                        vm.switchChange(7);
+                        break;
+                    case 3://时间间隔为5
+                        vm.hDay=29;
+                        vm.hMonth=29;
+                        vm.switchChange(5);
+                        break;
+                    case 4://时间间隔为3
+                        vm.hDay=29;
+                        vm.hMonth=29;
+                        vm.switchChange(3);
+                        break;
+                    case 5://时间间隔为2
+                        vm.hDay=29;
+                        vm.hMonth=29;
+                        vm.switchChange(2);
+                        break;
+                    case 6:
+                        vm.hWeek=19;
+                        vm.hMonth=19;
+                        vm.hWatt=20;
+                        vm.switchChange(0);
+                        break;
+                    case 7://只显示月周星期
+                        vm.hDay=29;
+                        vm.hMonth=29;
+                        vm.switchChange(0);
+                        break;
                 }
-                console.log(vm.cardSize);
             },
-            maxScaleWidth(newVal){
+            switchChange(value){
                 let vm=this;
-                if(vm.cardSize==70){
-                    if(newVal==10){
-                        vm.month= vm.sevenList;
-                        return
-                    }
-                    if(newVal==7){
-                        vm.month= vm.fiveList;
-                        return
-                    }
-                    if(newVal==5){
-                        vm.month= vm.threeList;
-                        return
-                    }
-                    if(newVal==3){
-                        vm.month= vm.twoList;
-                        return
-                    }
-                    if(newVal==2){
+                switch (value) {
+                    case -1:
+                        let len=vm.year.length-1;
+                        vm.year[len].length=365;
+                        break;
+                    case 0:
                         vm.month= vm.originMonth;
-                        return
-                    }
+                        vm.day=vm.originDay;
+                        vm.year=JSON.parse(JSON.stringify(vm.originYear));
+                        vm.caleWidth(vm.day.length);
+                        break;
+                    case 2:
+                        vm.month= vm.twoList;
+                        vm.day=vm.twoDay;
+                        vm.year=vm.twoYear;
+                        vm.caleWidth(vm.day.length);
+                        break;
+                    case 3:
+                        vm.month= vm.threeList;
+                        vm.day=vm.threeDay;
+                        vm.year=vm.threeYear;
+                        vm.caleWidth(vm.day.length);
+                        break;
+                    case 5:
+                        vm.month= vm.fiveList;
+                        vm.day=vm.fiveDay;
+                        vm.year=vm.fiveYear;
+                        vm.caleWidth(vm.day.length);
+                        break;
+                    case 7:
+                        vm.month= vm.sevenList;
+                        vm.day=vm.sevenDay;
+                        vm.year=vm.sevenYear;
+                        console.log(vm.day);
+                        vm.caleWidth(vm.day.length);
+                        break;
+                    case 10:
+                        vm.month= vm.tenList;
+                        vm.day=vm.tenDay;
+                        vm.year=vm.tenYear;
+                        vm.caleWidth(vm.day.length);
+                        break;
+
                 }
-                console.log(vm.cardSize);
             },
             //表头的日历
             caleTime(){
                 let vm=this;
-                // let start_time= vm.formatTime(vm.start_time);
-                // let end_time= vm.formatTime(vm.end_time);
-                let start_time='2018-1-15';
-                let end_time='2018-2-28';
-                var s1 = start_time.replace(/-/g, "/");
-                var s2 = end_time.replace(/-/g, "/");
-                let d1 = new Date(s1);
-                let d2 = new Date(s2);
-                var time= d2.getTime() - d1.getTime();
+                vm.plusDayMethod()//将日历的开始和结束加上几天
+                let start_time= vm.formatTime(vm.time.start_time);
+                let end_time= vm.formatTime(vm.time.end_time);
+                var time= vm.time.end_time - vm.time.start_time;
                 var days = parseInt(time / (1000 * 60 * 60 * 24));
                 console.log(days);
                 let array1 = start_time.split('-');
@@ -197,18 +312,32 @@ isReduce:是否缩小
                 let day2 = parseInt(array2[2]);
                 console.log(start_time);
                 console.log(end_time);
-                vm.caleYear(year1,year2);
-                vm.caleMonth(month1,month2);
-                vm.caleDay(day1,day2);
-                vm.caleWeek(year1,d1);
+                vm.caleYear(year1,year2);//计算年
+                vm.caleMonth(month1,month2);//计算月
+                vm.caleDay(day1,day2);//计算天
+                vm.caleWeek(year1,vm.time.start_time);//计算有多少周
                 vm.caleChange();
-                vm.caleWidth()
-
+                vm.caleWidth();
+                vm.judgeXun();
             },
-            //计算宽度
-            caleWidth(){
+            //将开始时间加1，截止时间加5
+            plusDayMethod(){
                 let vm=this;
-                $("#time").width(vm.day.length*vm.cardSize);
+                console.log("减了一天");
+                let start=vm.plusDay.start;
+                let end=vm.plusDay.end;
+                let startTime=parseInt(vm.time.start_time);
+                let endTime=parseInt(vm.time.end_time);
+                vm.time.start_time= startTime-(1000*60*60*24)*start;
+                vm.time.end_time=endTime+(1000*60*60*24)*end;
+                console.log(vm.time)
+            },
+
+            //计算宽度
+            caleWidth(len){
+                let vm=this;
+                $("#time").width(len*vm.cardSize);
+                console.log(len*vm.cardSize)
             },
             caleYear(year1,year2){
                 let vm=this;
@@ -218,7 +347,7 @@ isReduce:是否缩小
                     if(year1<=year2){
                         obj={
                             year:year1,
-                            width:0,
+                            length:0
                         };
                         vm.year.push(obj);
                         year1=year1+1;
@@ -230,29 +359,40 @@ isReduce:是否缩小
                 let len= vm.year.length;
                 let obj={};
                 for(let i=0;i<vm.year.length;i++){
-                    if(i==0){
-                        for (let j=month1-1;j<12;j++) {
-                            obj={
-                                year:vm.year[i].year,
-                                month:j+1,
-                                width:0
-                            }
-                            vm.month.push(obj)
-                        }
-                    }else if(i==len-1){
-                        for (let j = 0; j < 12; j++) {
-                            let num =j+1;
-                            if (num <= month2) {
+                    if(vm.year.length!=1){
+                        if(i==0){
+                            for (let j=month1-1;j<12;j++) {
                                 obj={
                                     year:vm.year[i].year,
-                                    month:num,
+                                    month:j+1,
+                                    width:0
+                                };
+                                vm.month.push(obj)
+                            }
+                        }else if(i==len-1){
+                            for (let j = 0; j < 12; j++) {
+                                let num =j+1;
+                                if (num <= month2) {
+                                    obj={
+                                        year:vm.year[i].year,
+                                        month:num,
+                                        width:0
+                                    }
+                                    vm.month.push(obj)
+                                }
+                            }
+                        }else{
+                            for (let j = 0; j < 12; j++) {
+                                obj={
+                                    year:vm.year[i].year,
+                                    month:j + 1,
                                     width:0
                                 }
                                 vm.month.push(obj)
                             }
                         }
                     }else{
-                        for (let j = 0; j < 12; j++) {
+                        for (let j = month1-1; j < month2; j++) {
                             obj={
                                 year:vm.year[i].year,
                                 month:j + 1,
@@ -261,6 +401,7 @@ isReduce:是否缩小
                             vm.month.push(obj)
                         }
                     }
+
 
                 }
             },
@@ -277,10 +418,11 @@ isReduce:是否缩小
                         vm.resetDay(obj,item,0)
                     }
                 }
-                console.log(vm.day);
-                console.log(vm.month);
+                vm.setWeek();//计算星期
+                vm.year=vm.changeYear(vm.day);//确定年的长度
                 vm.originMonth=JSON.parse(JSON.stringify(vm.month));
                 vm.originDay=JSON.parse(JSON.stringify(vm.day));
+                vm.originYear=JSON.parse(JSON.stringify(vm.year));
             },
             resetDay(obj,item,day,end=0){
                 let vm=this;
@@ -298,7 +440,8 @@ isReduce:是否缩小
                         obj={year:item.year, month: item.month,day:day};vm.day.push(obj)
                     }
                 }else if(item.month==2){
-                    if(item.year%4==0){
+                    if(item.year%4==0&&
+                        item.year%100!=0){
                         if(end==0){end=29}
                         item.width=(end-day)*vm.cardSize;
                         item.length=end-day;
@@ -324,31 +467,41 @@ isReduce:是否缩小
                     item.width=(end-day)*vm.cardSize;
                     item.length=end-day;
                     item.day=[];
-                    for(let j=day;j<30;j++){
+                    for(let j=day;j<end;j++){
                         let day=vm.PrefixInteger(j+1,2);
                         item.day.push(day);
                         obj={year:item.year, month: item.month,day:day};vm.day.push(obj)
                     }
                 }
             },
+            setWeek(){
+                let vm=this;
+                var weekDay = ["天", "一", "二", "三", "四", "五", "六"];
+                let day=JSON.parse(JSON.stringify(vm.day));
+                for(let i=0;i<day.length;i++){
+                    let item=day[i].year+'/'+day[i].month+'/'+day[i].day;
+                    var myDate = new Date(Date.parse(item));
+                    day[i].week=weekDay[myDate.getDay()]
+                }
+                vm.day=day
+            },
             //如果是一位则补零
             PrefixInteger(num, n) {
                 return (Array(n).join(0) + num).slice(-n);
             },
+            //计算是第几周
             caleWeek(year,data2){
                 let vm=this;
                 let date1 = new Date(year, 0, 1);
-                let time=data2.getTime()-date1.getTime();
+                let time=data2-date1.getTime();
                 var days = parseInt(time  / (1000 * 60 * 60 * 24));
                 let week=0;
                 if(days%7==0){
                     week=days/7
-
                 }else{
                     week=parseInt(days/7)
                 }
                 vm.week=week;
-                console.log("第几周"+vm.week)
             },
             caleChange(){
                 let vm=this;
@@ -356,15 +509,25 @@ isReduce:是否缩小
                 let arr2=vm.changeDay(3);
                 let arr3=vm.changeDay(5);
                 let arr4=vm.changeDay(7);
-                let arr5=vm.changeDay(10);
+                let arr5=vm.judgeXun();
+                vm.twoDay=arr1;
+                vm.threeDay=arr2;
+                vm.fiveDay=arr3;
+                vm.sevenDay=arr4;
+                console.log("打印出星期的长度");
+                console.log(vm.sevenDay);
+                vm.tenDay=arr5;
                 vm.twoList=vm.ChangeMonth(arr1);
                 vm.threeList=vm.ChangeMonth(arr2);
                 vm.fiveList=vm.ChangeMonth(arr3);
                 vm.sevenList=vm.ChangeMonth(arr4);
                 vm.tenList=vm.ChangeMonth(arr5);
-                console.log("这是上旬下旬中旬的结果");
-                console.log(arr5);
 
+                vm.twoYear=vm.changeYear(arr1);
+                vm.threeYear=vm.changeYear(arr2);
+                vm.fiveYear=vm.changeYear(arr3);
+                vm.sevenYear=vm.changeYear(arr4);
+                vm.tenYear=vm.changeYear(arr5);
             },
             //改变天的间隔
             changeDay(n){
@@ -375,30 +538,101 @@ isReduce:是否缩小
                 for(let i=0;i<originDay.length;i++){
                     if(i%n==0){
                         if(n==7){
+                            if(i==0){
+                                let w=originDay[i].week;
+                                originDay[i].length=vm.judgeWeekLength(w,false)
+                            }else{
+                                originDay[i].length=7
+                            }
                             week=week+1;
                             originDay[i].day='第'+(week)+'周';
                             newDay.push(originDay[i]);
-                        }else if(n==10){
-                            originDay[i]=vm.judgeXun(originDay[i]);
-                            newDay.push(originDay[i]);
                         }else{
                             newDay.push(originDay[i]);
+                        }
+                    }else{//有余数的时候
+                        if(i==originDay.length-1&&n==7){
+                            // let w=originDay[i].week;
+                            // originDay[i].length=vm.judgeWeekLength(w,true);
+                            // week=week+1;
+                            // originDay[i].day='第'+(week)+'周';
+                            // newDay.push(originDay[i]);
                         }
                     }
                 }
                 originDay=newDay;
                 return originDay
             },
+            //开始时星期的长度
+            judgeWeekLength(value,end=false){
+                let len=0;
+                switch (value) {
+                    case '一':
+                        if(end){len=1;}else{len=7;}
+                        break;
+                    case '二':
+                        if(end){len=2;}else{len=6;}
+                        break;
+                    case '三':
+                        if(end){len=3;}else{ len=5;}
+                        break;
+                    case '四':
+                        if(end){len=4;}else{len=4;}
+                        break;
+                    case '五':
+                        if(end){len=5;}else{   len=3;}
+                        break;
+                    case '六':
+                        if(end){len=6;}else{len=2;}
+                        break;
+                    case '天':
+                        if(end){len=7;}else{len=1;}
+                        break;
+                }
+                return len
+            },
             //判断上旬、中旬、下旬
             judgeXun(item){
-                if(item.day<=10){
-                    item.day='上旬'
-                }else if(item.day>=21){
-                    item.day='下旬'
-                }else{
-                    item.day='中旬'
+                let vm=this;
+                let month=JSON.parse(JSON.stringify(vm.month));
+                let obj={};
+                let arr=[];
+                for(let i=0;i<month.length;i++){
+                    if(i==0){
+                        month[i].day=vm.reTurnXun(month[i].day[0]);
+                        for(let j=0;j<month[i].day.length;j++){
+                            obj={
+                                year:month[i].year,
+                                month:month[i].month,
+                                day:month[i].day[j]
+                            };
+                            arr.push(obj)
+                        }
+                    }else{
+                        month[i].day=vm.reTurnXun(0);
+                        for(let j=0;j<month[i].day.length;j++){
+                            obj={
+                                year:month[i].year,
+                                month:month[i].month,
+                                day:month[i].day[j]
+                            };
+                            arr.push(obj)
+                        }
+                    }
                 }
-                return item
+
+                return arr
+            },
+            reTurnXun(day){
+                let item=[];
+                if(day<=10){
+                    item=['上旬','中旬','下旬']
+                }else if(day>=21){
+                    item=['下旬']
+                }else{
+                    item=['中旬','下旬']
+                }
+                return item;
             },
             //改变月里面天的间隔
             ChangeMonth(arr1){
@@ -411,62 +645,70 @@ isReduce:是否缩小
                             arr1[i].month==arr2[j].month
                         ){
                             obj.push(arr1[i].day);
-                            arr2[j].day=obj
+                            arr2[j].day=obj;
+                            arr2[j].length= arr2[j].day.length
                         }
                     }
 
                 }
                 return arr2
-
             },
+            //改变年的间隔
+            changeYear(arr1){
+                let vm=this;
+                let arr2=JSON.parse(JSON.stringify(vm.year));
+                for(let j=0;j<arr2.length;j++){
+                    let obj=[];
+                    for(let i=0;i<arr1.length;i++){
+                        if(arr1[i].year==arr2[j].year
+                        ){
+                            obj.push(arr1[i].day);
+                            arr2[j].day=obj;
+                            arr2[j].length= arr2[j].day.length
+                        }
+                    }
+
+                }
+                return arr2
+            },
+
             formatTime(time) {
                 return common.formateTimestamp(time, "YYYY-MM-DD");
             },
-            //监听鼠标事件
-            handleScroll:debounce(function (e) {
-                // let vm=this;
-                // let direction = e.deltaY>0?'down':'up' ;//该语句可以用来判断滚轮是向上滑动还是向下
-                // if(direction=='down'){
-                //     if(vm.cardSize<20){return}
-                //     vm.cardSize=vm.cardSize-vm.scale;
-                //     vm.minScaleWidth();
-                //     vm.initTime()
-                // }else{
-                //     if(vm.cardSize>=70){return}
-                //     this.cardSize=this.cardSize+vm.scale;
-                //     vm.maxScaleWidth();
-                //     vm.initTime()
-                // }
-            },10),
-
         }
     }
 </script>
 
-<style scoped lang="less">
+<style  lang="less">
     .time-container-row{
-        position: fixed;
-        left: 0;
-        // height: 60px;
         color: #6b6b6b;
         font-size: 12px;
-        border: 1px solid #CECECE;
+        border: 1px solid red;
         .common-time{
             display: flex;
             flex-direction: row;
             height: 19px;
-            border-bottom: 1px solid #CECECE;
+            //  border-bottom: 1px solid #CECECE;
             .common-time-inner{
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                border-right: 1px solid #ebebeb;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                position: relative;
+                border-bottom: 0.5px solid #CECECE;
+                //     background-color: #b2dba1;
             }
-            .common-time-inner:last-child{
-                border-right: none;
-            }
-            &:first-child{
-
+             .common-time-inner:after {
+                content: "";
+                width:1px;
+                height:100%;
+                background-color: #ebebeb;
+                position: absolute;
+                top: 0;
+                z-index: 1;
+                right: 0;
             }
             &:last-child{
                 border-bottom: none;
@@ -474,42 +716,5 @@ isReduce:是否缩小
         }
 
     }
-    /*.time-container{*/
-    /*position: fixed;*/
-    /*left: 0;*/
-    /*color: #6b6b6b;*/
-    /*font-size: 12px;*/
-    /*.common-time{*/
-    /*display: flex;*/
-    /*flex-direction: row;*/
-    /*border: 1px solid #CECECE;*/
-    /*border-right: none;*/
-    /*.common-time-item{*/
-    /*.month{*/
-    /*display: flex;*/
-    /*align-items: center;*/
-    /*justify-content: center;*/
-    /*border-right: 1px solid #CECECE;*/
-    /*border-bottom: 1px solid #CECECE;*/
-    /*height: 19px;*/
-    /*}*/
-    /*.common-time-inner{*/
-    /*display: flex;*/
-    /*flex-direction: row;*/
-    /*.day{*/
-    /*display: flex;*/
-    /*align-items: center;*/
-    /*justify-content: center;*/
-    /*height: 19px;*/
-    /*border-right: 1px solid #CECECE;*/
-    /*}*/
-
-    /*}*/
-    /*}*/
-
-    /*//  height: 38px;*/
-    /*}*/
-
-    /*}*/
 
 </style>
