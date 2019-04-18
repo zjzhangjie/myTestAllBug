@@ -1,8 +1,13 @@
 <template>
     <div class="map-container">
-        <div id="container" class="container"></div>
-        <vue-draggable-resizable :grid=[20,20] :parent="true"   class-name="first-move">
-            <p>Grid 20x20 starting from the top-left corner</p>
+        <!--<div id="container" class="container"></div>-->
+        <vue-draggable-resizable  :draggable="true" :z-index="1" :grid=[20,20] :parent="true"   class-name="first-move">
+            <div>
+                父亲
+            </div>
+        </vue-draggable-resizable>
+        <vue-draggable-resizable  :z-index="2"  :maxHeight="30" :maxWidth="30"  @activated="onActivated" :grid=[20,20]  class-name="tow-move">
+            <p>child</p>
         </vue-draggable-resizable>
     </div>
 
@@ -17,8 +22,7 @@
         name: "gaodeMap",
         data(){
             return{
-                draggableB:true,
-                draggableS:false
+                draggable:true,
             }
 
         },
@@ -27,10 +31,8 @@
 
         },
         methods:{
-            change(){
-            //    alert("点击")
-                this.draggableB=false;
-                this.draggableS=true
+            onActivated(){
+                this.draggable=false;
             },
             initMap(){
                 var map = new AMap.Map('container',{
@@ -56,6 +58,14 @@
         }
         .first-move{
             background-color: red;
+            .child{
+                width: 100%;
+                height: 100%;
+                position: relative;
+            }
+        }
+        .tow-move{
+            background-color: fuchsia;
         }
         .parent{
             position: relative;
