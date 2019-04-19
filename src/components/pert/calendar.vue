@@ -68,7 +68,7 @@ end：0
                 type:Object,
                 default:function(){
                     return{
-                        start:1,
+                        start:11,
                         end:6
                     }
                 },
@@ -183,8 +183,8 @@ end：0
         watch:{
             zoomT(newVal,oldVal){
                 let vm=this;
-                vm.zoomChange(newVal)
-                console.log("cardsize的距离")
+                vm.zoomChange(newVal);
+                console.log("cardsize的距离");
                 console.log(vm.cardSize)
 
             },
@@ -556,20 +556,25 @@ end：0
                             newDay.push(originDay[i]);
                         }
                     }else{//有余数的时候
-                        if(i==originDay.length-1&&n==7){
-                            if(originDay[0].week=='一'){
+                        if(n==7){
+                            if(i==originDay.length-1){
+                                //    if(originDay[0].week=='一'){
+                                console.log((originDay.length-1)/7)
                                 let w=originDay[i].week;
-                                let more=vm.judgeWeekLength(w,true);
-                                newDay[newDay.length-1].length=more
-                            }else{
-                                let w=originDay[i].week;
-                                originDay[i].length=vm.judgeWeekLength(w,true);
-                                week=week+1;
-                                originDay[i].day='第'+(week)+'周';
-                                newDay.push(originDay[i]);
-                            }
+                                let len=vm.judgeWeekLength(w,true);
+                                newDay[newDay.length-1].length=len
+                                //      }
+                                // else{
+                                //     let w=originDay[i].week;
+                                //     originDay[i].length=vm.judgeWeekLength(w,true);
+                                //     week=week+1;
+                                //     originDay[i].day='第'+(week)+'周';
+                                //     newDay.push(originDay[i]);
+                                // }
 
+                            }
                         }
+
                     }
                 }
                 originDay=newDay;
