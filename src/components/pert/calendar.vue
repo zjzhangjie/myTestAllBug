@@ -68,7 +68,7 @@ end：0
                 type:Object,
                 default:function(){
                     return{
-                        start:11,
+                        start:1,
                         end:6
                     }
                 },
@@ -538,14 +538,16 @@ end：0
                 let newDay=[];
                 for(let i=0;i<originDay.length;i++){
                     if(i%n==0){
-                        if(n==7){
+                        if(n==7){//整除时
                             if(i==0){
                                 let w=originDay[i].week;
                                 originDay[i].length=vm.judgeWeekLength(w,false)
-                            }else if(i==originDay.length-1){
+                            }
+                            else if(i==originDay.length-1){
                                 let w=originDay[i].week;
                                 originDay[i].length=vm.judgeWeekLength(w,true)
-                            }else{
+                            }
+                            else{
                                 originDay[i].length=7
                             }
                             week = week + 1;
@@ -558,19 +560,22 @@ end：0
                     }else{//有余数的时候
                         if(n==7){
                             if(i==originDay.length-1){
-                                //    if(originDay[0].week=='一'){
+                                   if(originDay[0].week=='一'||
+                                       originDay[0].week=='二'||
+                                       originDay[0].week=='三'
+                                   ){
                                 console.log((originDay.length-1)/7)
                                 let w=originDay[i].week;
                                 let len=vm.judgeWeekLength(w,true);
                                 newDay[newDay.length-1].length=len
-                                //      }
-                                // else{
-                                //     let w=originDay[i].week;
-                                //     originDay[i].length=vm.judgeWeekLength(w,true);
-                                //     week=week+1;
-                                //     originDay[i].day='第'+(week)+'周';
-                                //     newDay.push(originDay[i]);
-                                // }
+                                     }
+                                else{
+                                    let w=originDay[i].week;
+                                    originDay[i].length=vm.judgeWeekLength(w,true);
+                                    week=week+1;
+                                    originDay[i].day='第'+(week)+'周';
+                                    newDay.push(originDay[i]);
+                                }
 
                             }
                         }
